@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Naçaí — PDV & Financeiro</title>
+<style>
+:root{--roxo:#5B1FA0;--roxo-e:#3D1270;--roxo-c:#7B3FC4;--acai:#2D0A4E;--creme:#F9F3FF;--lilas:#E8D5FF;--verde:#2ECC71;--verde-e:#27AE60;--vermelho:#E74C3C;--amarelo:#F39C12;--azul:#2980B9;--cinza:#7F8C8D;--cinza-c:#ECF0F1;--sombra:0 2px 12px rgba(91,31,160,.13);--r:12px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--creme);color:var(--acai);min-height:100vh;}
+/* HEADER */
+header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;padding:11px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 3px 15px rgba(0,0,0,.3);position:sticky;top:0;z-index:200;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:36px;height:36px;background:var(--lilas);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.logo h1{font-size:1.2rem;font-weight:800;letter-spacing:1px;}
+.logo span{font-size:.6rem;opacity:.7;display:block;letter-spacing:2px;text-transform:uppercase;}
+#relogio{font-size:.75rem;opacity:.7;margin-right:6px;}
+#statusFb{font-size:.65rem;padding:3px 8px;border-radius:10px;font-weight:700;background:rgba(255,255,255,.15);}
+#statusFb.ok{background:rgba(46,204,113,.35);}
+#statusFb.err{background:rgba(231,76,60,.35);}
+/* TABS */
+.tabs{display:flex;background:var(--roxo-e);padding:0 16px;gap:2px;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:9px 14px;color:rgba(255,255,255,.55);cursor:pointer;font-size:.78rem;font-weight:700;border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s;user-select:none;}
+.tab.active{color:#fff;border-bottom-color:#C084FC;}
+.tab:hover:not(.active){color:rgba(255,255,255,.85);}
+/* LOADING */
+#loadingOv{position:fixed;inset:0;background:var(--acai);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;}
+#loadingOv .spin{width:40px;height:40px;border:4px solid rgba(255,255,255,.2);border-top-color:#C084FC;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* PAGES */
+.page{display:none;padding:18px;max-width:1120px;margin:0 auto;}
+.page.active{display:block;}
+/* CARDS */
+.card{background:#fff;border-radius:var(--r);padding:18px;box-shadow:var(--sombra);}
+.card+.card{margin-top:14px;}
+.sec-title{font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--cinza);font-weight:700;margin-bottom:12px;}
+/* PDV GRID */
+.pdv-grid{display:grid;grid-template-columns:1fr 350px;gap:16px;align-items:start;}
+/* BALANÇA */
+.balanca-display{background:var(--acai);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.peso-value{color:#C084FC;font-size:2.6rem;font-weight:800;font-family:'Courier New',monospace;letter-spacing:2px;}
+.peso-unit{color:rgba(255,255,255,.45);font-size:.95rem;align-self:flex-end;padding-bottom:6px;}
+.peso-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px;}
+.btn-num{background:var(--lilas);border:none;border-radius:8px;padding:10px;font-size:.85rem;font-weight:700;color:var(--roxo-e);cursor:pointer;transition:all .15s;}
+.btn-num:hover{background:var(--roxo-c);color:#fff;}
+.btn-num.ap{background:#FFE0E0;color:var(--vermelho);}
+.btn-num.ap:hover{background:var(--vermelho);color:#fff;}
+.btn-num.gz{background:var(--cinza-c);color:var(--cinza);}
+.btn-add-kg{width:100%;background:var(--roxo);color:#fff;border:none;padding:11px;border-radius:10px;font-weight:800;font-size:.92rem;cursor:pointer;transition:all .2s;margin-top:2px;}
+.btn-add-kg:hover{background:var(--roxo-e);}
+/* PRODUTOS */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:9px;}
+.prod-btn{background:var(--creme);border:2px solid var(--lilas);border-radius:10px;padding:12px 8px;cursor:pointer;text-align:center;transition:all .2s;position:relative;}
+.prod-btn:hover,.prod-btn.sel{border-color:var(--roxo);background:var(--lilas);}
+.prod-btn.sel::after{content:'✓';position:absolute;top:4px;right:6px;color:var(--roxo);font-weight:900;font-size:.75rem;}
+.prod-emoji{font-size:1.6rem;display:block;margin-bottom:5px;}
+.prod-nome{font-size:.73rem;font-weight:700;}
+.prod-preco{font-size:.68rem;color:var(--roxo);margin-top:2px;font-weight:600;}
+.adic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:7px;margin-top:12px;}
+.adic-btn{background:#fff;border:2px solid var(--cinza-c);border-radius:8px;padding:9px 6px;cursor:pointer;text-align:center;font-size:.7rem;font-weight:600;color:var(--cinza);transition:all .15s;}
+.adic-btn:hover{border-color:var(--roxo);color:var(--roxo);}
+.adic-emoji{font-size:1.2rem;display:block;margin-bottom:3px;}
+/* PEDIDO */
+.pedido-card{background:#fff;border-radius:var(--r);padding:18px;box-shadow:var(--sombra);position:sticky;top:90px;}
+.tipo-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;}
+.tipo-btn{padding:5px 11px;border-radius:20px;border:2px solid var(--lilas);background:#fff;font-size:.72rem;font-weight:700;cursor:pointer;color:var(--cinza);transition:all .15s;}
+.tipo-btn.active{background:var(--roxo);border-color:var(--roxo);color:#fff;}
+.del-form{background:var(--creme);border-radius:10px;padding:12px;margin-bottom:12px;display:none;}
+.del-form.show{display:block;}
+.f-row{margin-bottom:9px;}
+.f-row label{font-size:.67rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:3px;}
+.f-row input,.f-row textarea,.f-row select{width:100%;padding:7px 9px;border:1.5px solid var(--lilas);border-radius:7px;font-size:.8rem;background:#fff;color:var(--acai);outline:none;transition:border .2s;}
+.f-row input:focus,.f-row textarea:focus{border-color:var(--roxo);}
+.f-row textarea{resize:none;height:52px;}
+/* ITENS */
+.itens-lista{min-height:70px;margin-bottom:12px;}
+.item-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--cinza-c);}
+.item-info{flex:1;}
+.item-nome{font-size:.8rem;font-weight:700;}
+.item-det{font-size:.68rem;color:var(--cinza);}
+.item-val{font-size:.85rem;font-weight:700;color:var(--roxo);white-space:nowrap;}
+.btn-rm{background:none;border:none;color:var(--vermelho);cursor:pointer;font-size:.95rem;opacity:.55;transition:opacity .15s;}
+.btn-rm:hover{opacity:1;}
+.empty-cart{text-align:center;color:var(--cinza);font-size:.78rem;padding:18px;opacity:.65;}
+/* TOTAIS */
+.totais-box{background:var(--creme);border-radius:9px;padding:11px 13px;margin-bottom:12px;}
+.tot-linha{display:flex;justify-content:space-between;font-size:.77rem;margin-bottom:4px;color:var(--cinza);}
+.tot-linha.big{font-size:1rem;font-weight:800;color:var(--acai);margin-top:7px;padding-top:7px;border-top:1.5px solid var(--lilas);}
+/* PAGAMENTO MISTO */
+.pag-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;}
+.pag-btn{padding:8px;border:2px solid var(--lilas);border-radius:8px;background:#fff;font-size:.72rem;font-weight:700;color:var(--cinza);cursor:pointer;text-align:center;transition:all .15s;position:relative;}
+.pag-btn.active{border-color:var(--verde);background:#E8F8F0;color:var(--verde-e);}
+.pag-icon{font-size:1rem;display:block;margin-bottom:2px;}
+.pag-valor-badge{position:absolute;top:3px;right:4px;font-size:.58rem;background:var(--verde);color:#fff;border-radius:8px;padding:1px 5px;font-weight:800;}
+.pag-entrada{background:var(--creme);border-radius:9px;padding:10px 12px;margin-bottom:10px;display:none;}
+.pag-entrada.show{display:block;}
+.pag-entrada-titulo{font-size:.68rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
+.pag-entrada-valor{display:flex;align-items:center;gap:8px;}
+.pag-entrada-valor input{flex:1;padding:8px 10px;border:1.5px solid var(--lilas);border-radius:8px;font-size:.88rem;font-weight:700;outline:none;background:#fff;}
+.pag-entrada-valor input:focus{border-color:var(--roxo);}
+.btn-conf-pag{background:var(--roxo);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;}
+.pag-resumo{margin-bottom:10px;display:none;}
+.pag-resumo.show{display:block;}
+.pag-resumo-item{display:flex;justify-content:space-between;font-size:.75rem;padding:4px 0;border-bottom:1px solid var(--cinza-c);}
+.pag-resumo-item:last-child{border-bottom:none;}
+.pag-falta{background:#FFF5E0;border:1.5px solid var(--amarelo);border-radius:8px;padding:8px 12px;margin-bottom:10px;display:none;}
+.pag-falta.show{display:flex;justify-content:space-between;align-items:center;}
+.pag-troco{background:#E8F8F0;border:1.5px solid var(--verde);border-radius:8px;padding:8px 12px;margin-bottom:10px;display:none;}
+.pag-troco.show{display:flex;justify-content:space-between;align-items:center;}
+.troco-row{display:none!important;}
+/* BOTÕES */
+.btn-ok{width:100%;background:linear-gradient(135deg,var(--verde-e),var(--verde));color:#fff;border:none;padding:13px;border-radius:10px;font-size:.95rem;font-weight:800;cursor:pointer;transition:all .2s;}
+.btn-ok:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(46,204,113,.35);}
+.btn-clr{width:100%;background:none;border:1.5px solid var(--lilas);color:var(--cinza);padding:8px;border-radius:8px;font-size:.77rem;font-weight:600;cursor:pointer;margin-top:7px;transition:all .15s;}
+.btn-clr:hover{border-color:var(--vermelho);color:var(--vermelho);}
+/* HISTÓRICO */
+.filtros{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;}
+.f-btn{padding:6px 13px;border:1.5px solid var(--lilas);border-radius:20px;background:#fff;font-size:.72rem;font-weight:600;cursor:pointer;color:var(--cinza);transition:all .15s;}
+.f-btn.active{background:var(--roxo);border-color:var(--roxo);color:#fff;}
+.venda-card{background:#fff;border-radius:10px;padding:13px 15px;margin-bottom:9px;box-shadow:0 1px 6px rgba(91,31,160,.07);display:flex;align-items:center;gap:13px;}
+.venda-num{background:var(--lilas);color:var(--roxo-e);border-radius:8px;padding:7px 11px;font-weight:800;font-size:.95rem;min-width:48px;text-align:center;}
+.venda-info{flex:1;}
+.venda-cli{font-weight:700;font-size:.85rem;}
+.venda-det{font-size:.68rem;color:var(--cinza);margin-top:2px;}
+.venda-val{font-size:.95rem;font-weight:800;color:var(--verde-e);}
+.badge{font-size:.62rem;padding:2px 7px;border-radius:12px;font-weight:700;}
+.b-balcao{background:#E8D5FF;color:var(--roxo);}
+.b-delivery{background:#D5F0FF;color:#1A6B9E;}
+.b-retirada{background:#FFF0D5;color:#9E5E1A;}
+/* FINANCEIRO */
+.fin-layout{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;}
+.fin-resumo{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:18px;}
+.res-card{border-radius:10px;padding:16px 18px;color:#fff;}
+.res-card.r{background:linear-gradient(135deg,var(--verde-e),var(--verde));}
+.res-card.p{background:linear-gradient(135deg,#C0392B,var(--vermelho));}
+.res-card.s{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));}
+.res-lbl{font-size:.65rem;opacity:.8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.res-val{font-size:1.45rem;font-weight:800;}
+.res-sub{font-size:.65rem;opacity:.7;margin-top:3px;}
+.lan-form{background:var(--creme);border-radius:10px;padding:14px;margin-bottom:16px;}
+.lan-tipo-toggle{display:flex;gap:0;margin-bottom:12px;border-radius:8px;overflow:hidden;border:1.5px solid var(--lilas);}
+.lan-tipo-btn{flex:1;padding:8px;border:none;background:#fff;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s;color:var(--cinza);}
+.lan-tipo-btn.r.active{background:var(--verde);color:#fff;}
+.lan-tipo-btn.p.active{background:var(--vermelho);color:#fff;}
+.form-2col{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.fi{padding:8px 10px;border:1.5px solid var(--lilas);border-radius:8px;font-size:.8rem;background:#fff;outline:none;width:100%;transition:border .2s;}
+.fi:focus{border-color:var(--roxo);}
+.btn-lan{background:var(--roxo);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;width:100%;margin-top:10px;transition:all .15s;}
+.btn-lan:hover{background:var(--roxo-e);}
+.lan-item{background:#fff;border-radius:9px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 5px rgba(0,0,0,.06);}
+.lan-ico{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.lan-ico.r{background:#E8F8F0;}
+.lan-ico.p{background:#FFE8E6;}
+.lan-info{flex:1;}
+.lan-desc{font-size:.83rem;font-weight:700;}
+.lan-meta{font-size:.68rem;color:var(--cinza);margin-top:2px;}
+.lan-val-r{font-size:.9rem;font-weight:800;color:var(--verde-e);white-space:nowrap;}
+.lan-val-p{font-size:.9rem;font-weight:800;color:var(--vermelho);white-space:nowrap;}
+.lan-status{font-size:.62rem;padding:2px 7px;border-radius:10px;font-weight:700;margin-left:4px;}
+.s-pago{background:#E8F8F0;color:var(--verde-e);}
+.s-pendente{background:#FFF5E0;color:#B07A00;}
+.s-vencido{background:#FFE8E6;color:var(--vermelho);}
+.btn-pagar{background:var(--verde);color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:.68rem;font-weight:700;cursor:pointer;}
+.btn-del-lan{background:none;border:none;color:var(--cinza);cursor:pointer;font-size:.85rem;opacity:.5;transition:opacity .15s;}
+.btn-del-lan:hover{opacity:1;color:var(--vermelho);}
+/* FECHAMENTO */
+.meses-nav{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.btn-mes{background:none;border:1.5px solid var(--lilas);border-radius:8px;padding:6px 13px;cursor:pointer;font-size:.8rem;font-weight:700;color:var(--roxo);transition:all .15s;}
+.btn-mes:hover{background:var(--lilas);}
+.mes-label{font-size:1.05rem;font-weight:800;color:var(--acai);flex:1;text-align:center;}
+.fechamento-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.fec-bloco{background:#fff;border-radius:10px;padding:16px;box-shadow:var(--sombra);}
+.fec-titulo{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.fec-linha{display:flex;justify-content:space-between;font-size:.78rem;padding:5px 0;border-bottom:1px solid var(--cinza-c);}
+.fec-linha:last-child{border-bottom:none;}
+.fec-linha.bold{font-weight:800;font-size:.88rem;}
+.fec-linha.verde{color:var(--verde-e);}
+.fec-linha.vermelho{color:var(--vermelho);}
+.btn-exportar{background:var(--roxo);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;font-size:.8rem;cursor:pointer;transition:all .15s;}
+.btn-exportar.verde-btn{background:var(--verde-e);}
+/* ANUAL */
+.anual-tabela{width:100%;border-collapse:collapse;font-size:.8rem;}
+.anual-tabela th{background:var(--acai);color:#fff;padding:10px 12px;text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;}
+.anual-tabela td{padding:9px 12px;border-bottom:1px solid var(--cinza-c);}
+.anual-tabela tr:hover td{background:var(--creme);}
+.anual-tabela .num{text-align:right;}
+.anual-tabela tfoot td{font-weight:800;background:var(--lilas);color:var(--roxo-e);}
+/* STATS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:13px;margin-bottom:18px;}
+.stat{background:#fff;border-radius:var(--r);padding:16px;box-shadow:var(--sombra);}
+.stat-lbl{font-size:.67rem;color:var(--cinza);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
+.stat-val{font-size:1.5rem;font-weight:800;color:var(--acai);}
+.stat.verde .stat-val{color:var(--verde-e);}
+.stat.vermelho .stat-val{color:var(--vermelho);}
+/* CONFIG */
+.cfg-section{background:#fff;border-radius:var(--r);padding:18px;margin-bottom:14px;box-shadow:var(--sombra);}
+.cfg-section h3{font-size:.87rem;font-weight:800;margin-bottom:13px;padding-bottom:9px;border-bottom:1.5px solid var(--lilas);}
+.cfg-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--cinza-c);}
+.cfg-row:last-of-type{border-bottom:none;}
+.cfg-lbl{font-size:.8rem;font-weight:600;}
+.cfg-sub{font-size:.68rem;color:var(--cinza);margin-top:2px;}
+.cfg-row input{padding:5px 9px;border:1.5px solid var(--lilas);border-radius:7px;font-size:.82rem;width:140px;text-align:right;outline:none;}
+.cfg-row input:focus{border-color:var(--roxo);}
+.prod-cfg-item{display:grid;grid-template-columns:1fr auto auto auto;gap:7px;align-items:center;padding:7px 0;border-bottom:1px solid var(--cinza-c);}
+.prod-cfg-item input{padding:5px 8px;border:1.5px solid var(--lilas);border-radius:6px;font-size:.77rem;outline:none;width:85px;}
+.prod-cfg-item input.nm{width:140px;}
+.btn-add-p{padding:8px 16px;border-radius:8px;border:none;background:var(--lilas);color:var(--roxo-e);font-weight:700;font-size:.78rem;cursor:pointer;margin-top:8px;}
+.btn-save{padding:9px 20px;border-radius:8px;border:none;background:var(--roxo);color:#fff;font-weight:700;font-size:.8rem;cursor:pointer;margin-top:8px;}
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+.modal-ov.show{display:flex;}
+.modal{background:#fff;border-radius:16px;padding:26px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.28);animation:pop .2s ease;}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.recibo-txt{font-family:'Courier New',monospace;font-size:.78rem;color:var(--acai);white-space:pre-wrap;max-height:55vh;overflow-y:auto;}
+.modal-btns{display:flex;gap:9px;margin-top:16px;}
+.btn-wpp{flex:1;background:#25D366;color:#fff;border:none;padding:10px;border-radius:9px;font-weight:700;font-size:.85rem;cursor:pointer;}
+.btn-fch{padding:10px 16px;border:1.5px solid var(--lilas);background:#fff;color:var(--cinza);border-radius:9px;font-weight:600;font-size:.82rem;cursor:pointer;}
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--acai);color:#fff;padding:11px 18px;border-radius:9px;font-size:.82rem;font-weight:600;z-index:9999;display:none;animation:slideUp .3s ease;}
+.toast.show{display:block;}
+.toast.verde{background:var(--verde-e);}
+.toast.vermelho{background:var(--vermelho);}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+/* SYNC badge */
+.sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;background:#aaa;}
+.sync-dot.ok{background:var(--verde);}
+.sync-dot.sync{background:var(--amarelo);animation:pulse .8s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+/* RESPONSIVE */
+@media(max-width:768px){
+  .pdv-grid,.fin-layout,.fechamento-grid,.fin-resumo{grid-template-columns:1fr;}
+  .pedido-card{position:static;}
+  .page{padding:12px;}
+  .form-2col{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loadingOv">
+  <div style="font-size:2rem;">🍇</div>
+  <div class="spin"></div>
+  <div style="font-size:.85rem;opacity:.7;">Conectando ao banco de dados...</div>
+</div>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🍇</div>
+    <div><h1>NAÇAÍ</h1><span>PDV & Financeiro</span></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+    <span id="relogio"></span>
+    <span id="statusFb">● Conectando...</span>
+    <span id="saldo-header" style="font-size:.75rem;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.15);font-weight:700;"></span>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="irTab('venda',this)">🛒 Venda</div>
+  <div class="tab" onclick="irTab('historico',this)">📋 Pedidos</div>
+  <div class="tab" onclick="irTab('financeiro',this)">💰 Financeiro</div>
+  <div class="tab" onclick="irTab('fechamento',this)">📅 Fechamento</div>
+  <div class="tab" onclick="irTab('anual',this)">📈 Anual</div>
+  <div class="tab" onclick="irTab('config',this)">⚙️ Config</div>
+</div>
+
+<!-- ====== VENDA ====== -->
+<div id="tab-venda" class="page active">
+<div class="pdv-grid">
+  <div>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="sec-title">⚖️ Peso / Balança</div>
+      <div class="balanca-display">
+        <div class="peso-value" id="pesoDisplay">0,000</div>
+        <div class="peso-unit">kg</div>
+      </div>
+      <div class="peso-grid">
+        <button class="btn-num" onclick="dg('1')">1</button>
+        <button class="btn-num" onclick="dg('2')">2</button>
+        <button class="btn-num" onclick="dg('3')">3</button>
+        <button class="btn-num ap" onclick="bk()">⌫</button>
+        <button class="btn-num" onclick="dg('4')">4</button>
+        <button class="btn-num" onclick="dg('5')">5</button>
+        <button class="btn-num" onclick="dg('6')">6</button>
+        <button class="btn-num gz" onclick="pr(500)">500g</button>
+        <button class="btn-num" onclick="dg('7')">7</button>
+        <button class="btn-num" onclick="dg('8')">8</button>
+        <button class="btn-num" onclick="dg('9')">9</button>
+        <button class="btn-num gz" onclick="pr(1000)">1kg</button>
+        <button class="btn-num gz" onclick="dg('0')">0</button>
+        <button class="btn-num" onclick="dg('00')">00</button>
+        <button class="btn-num" onclick="dg('000')">000</button>
+        <button class="btn-num gz" onclick="pr(1500)">1,5kg</button>
+      </div>
+      <button class="btn-add-kg" onclick="addKg()">➕ Adicionar ao Pedido</button>
+    </div>
+    <div class="card">
+      <div class="sec-title">🍇 Produtos por Kg</div>
+      <div class="prod-grid" id="prodGrid"></div>
+      <div class="sec-title" style="margin-top:16px;">🧃 Adicionais (fixo)</div>
+      <div class="adic-grid" id="adicGrid"></div>
+    </div>
+  </div>
+  <div>
+    <div class="pedido-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:.7rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;">
+          <span class="sync-dot" id="syncDot"></span>Pedido #<span id="numPed">001</span>
+        </div>
+        <div class="tipo-row">
+          <button class="tipo-btn active" onclick="setTipo('balcao',this)">🏪 Balcão</button>
+          <button class="tipo-btn" onclick="setTipo('delivery',this)">🛵 Delivery</button>
+          <button class="tipo-btn" onclick="setTipo('retirada',this)">📦 Retirada</button>
+        </div>
+      </div>
+      <div class="del-form" id="delForm">
+        <div class="f-row"><label>Nome</label><input type="text" id="fNome" placeholder="Ex.: Maria Silva"></div>
+        <div class="f-row"><label>Telefone</label><input type="text" id="fTel" placeholder="(85) 9 0000-0000"></div>
+        <div class="f-row" id="fEndRow"><label>Endereço</label><textarea id="fEnd" placeholder="Rua, número, bairro..."></textarea></div>
+        <div class="f-row"><label>Observações</label><input type="text" id="fObs" placeholder="Ex.: sem granola..."></div>
+      </div>
+      <div class="itens-lista" id="itensList">
+        <div class="empty-cart">Nenhum item.<br>Selecione um produto e informe o peso.</div>
+      </div>
+      <div class="totais-box">
+        <div class="tot-linha"><span>Subtotal</span><span id="tSub">R$ 0,00</span></div>
+        <div class="tot-linha" id="tTaxaRow" style="display:none"><span>Taxa entrega</span><span id="tTaxa">R$ 0,00</span></div>
+        <div class="tot-linha big"><span>TOTAL</span><span id="tGeral">R$ 0,00</span></div>
+      </div>
+      <div class="sec-title">💳 Pagamento <span id="pagMistoLabel" style="font-size:.65rem;color:var(--roxo);font-weight:600;display:none;">— misto</span></div>
+      <div class="pag-grid">
+        <button class="pag-btn" id="pbDinheiro" onclick="togglePag('dinheiro',this)"><span class="pag-icon">💵</span>Dinheiro<span class="pag-valor-badge" id="bDinheiro" style="display:none"></span></button>
+        <button class="pag-btn" id="pbPix" onclick="togglePag('pix',this)"><span class="pag-icon">📱</span>PIX<span class="pag-valor-badge" id="bPix" style="display:none"></span></button>
+        <button class="pag-btn" id="pbCredito" onclick="togglePag('credito',this)"><span class="pag-icon">💳</span>Crédito<span class="pag-valor-badge" id="bCredito" style="display:none"></span></button>
+        <button class="pag-btn" id="pbDebito" onclick="togglePag('debito',this)"><span class="pag-icon">💳</span>Débito<span class="pag-valor-badge" id="bDebito" style="display:none"></span></button>
+      </div>
+      <div class="pag-entrada" id="pagEntrada">
+        <div class="pag-entrada-titulo" id="pagEntradaTitulo">Valor em Dinheiro</div>
+        <div class="pag-entrada-valor">
+          <input type="number" id="pagValorInput" placeholder="0,00" step="0.01" oninput="previewPag()">
+          <button class="btn-conf-pag" onclick="confirmarPag()">Confirmar</button>
+        </div>
+        <div style="font-size:.68rem;color:var(--cinza);margin-top:5px;" id="pagSug"></div>
+      </div>
+      <div class="pag-resumo" id="pagResumo"></div>
+      <div class="pag-falta" id="pagFalta">
+        <div style="font-size:.7rem;font-weight:700;color:#9E6A00;">⏳ Ainda falta</div>
+        <div style="font-size:1rem;font-weight:800;color:var(--amarelo);" id="pagFaltaVal">R$ 0,00</div>
+      </div>
+      <div class="pag-troco" id="pagTroco">
+        <div style="font-size:.7rem;font-weight:700;color:var(--verde-e);">💰 Troco</div>
+        <div style="font-size:1rem;font-weight:800;color:var(--verde-e);" id="pagTrocoVal">R$ 0,00</div>
+      </div>
+      <div class="troco-row" id="trocoRow"><input id="vPagou"><span id="trocoVal"></span></div>
+      <button class="btn-ok" onclick="finalizarVenda()">✅ Finalizar Venda</button>
+      <button class="btn-clr" onclick="limpar()">🗑️ Limpar pedido</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ====== HISTÓRICO ====== -->
+<div id="tab-historico" class="page">
+  <div class="filtros">
+    <button class="f-btn active" onclick="filt('todos',this)">Todos</button>
+    <button class="f-btn" onclick="filt('balcao',this)">🏪 Balcão</button>
+    <button class="f-btn" onclick="filt('delivery',this)">🛵 Delivery</button>
+    <button class="f-btn" onclick="filt('retirada',this)">📦 Retirada</button>
+    <button class="f-btn" onclick="filt('hoje',this)">Hoje</button>
+    <button class="f-btn" onclick="filt('semana',this)">Esta semana</button>
+  </div>
+  <div id="histLista"></div>
+</div>
+
+<!-- ====== FINANCEIRO ====== -->
+<div id="tab-financeiro" class="page">
+  <div class="fin-resumo" id="finResumo"></div>
+  <div class="fin-layout">
+    <div>
+      <div class="filtros" style="margin-bottom:14px;">
+        <button class="f-btn active" onclick="filtFin('todos',this)">Todos</button>
+        <button class="f-btn" onclick="filtFin('receber',this)">💚 A Receber</button>
+        <button class="f-btn" onclick="filtFin('pagar',this)">🔴 A Pagar</button>
+        <button class="f-btn" onclick="filtFin('pendente',this)">⏳ Pendentes</button>
+        <button class="f-btn" onclick="filtFin('vencido',this)">🚨 Vencidos</button>
+        <button class="f-btn" onclick="filtFin('hoje',this)">Hoje</button>
+      </div>
+      <div id="lanLista"></div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="sec-title">➕ Novo Lançamento</div>
+        <div class="lan-form">
+          <div class="lan-tipo-toggle">
+            <button class="lan-tipo-btn r active" id="btnLanR" onclick="setLanTipo('receber')">💚 A Receber</button>
+            <button class="lan-tipo-btn p" id="btnLanP" onclick="setLanTipo('pagar')">🔴 A Pagar</button>
+          </div>
+          <div class="f-row"><label>Descrição</label><input type="text" class="fi" id="lDesc" placeholder="Ex.: Fornecedor polpa, Aluguel..."></div>
+          <div class="form-2col">
+            <div class="f-row"><label>Valor (R$)</label><input type="number" class="fi" id="lVal" placeholder="0,00" step="0.01"></div>
+            <div class="f-row"><label>Vencimento</label><input type="date" class="fi" id="lVenc"></div>
+          </div>
+          <div class="f-row"><label>Categoria</label>
+            <select class="fi" id="lCat">
+              <option value="vendas">Vendas PDV</option>
+              <option value="fornecedor">Fornecedor</option>
+              <option value="aluguel">Aluguel</option>
+              <option value="funcionario">Funcionário/Salário</option>
+              <option value="energia">Energia/Água/Gás</option>
+              <option value="embalagem">Embalagens</option>
+              <option value="equipamento">Equipamento</option>
+              <option value="imposto">Imposto/Taxa</option>
+              <option value="marketing">Marketing</option>
+              <option value="outros">Outros</option>
+            </select>
+          </div>
+          <div class="f-row"><label>Observação</label><input type="text" class="fi" id="lObs" placeholder="Opcional..."></div>
+          <div class="f-row"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="lPago"> Já pago / recebido</label></div>
+          <button class="btn-lan" onclick="novoLancamento()">💾 Salvar Lançamento</button>
+        </div>
+        <div style="border-top:1.5px solid var(--lilas);padding-top:12px;margin-top:4px;">
+          <div class="sec-title">⚡ Venda rápida</div>
+          <div class="form-2col">
+            <div class="f-row"><label>Valor (R$)</label><input type="number" class="fi" id="qVal" placeholder="0,00"></div>
+            <div class="f-row"><label>Data</label><input type="date" class="fi" id="qData"></div>
+          </div>
+          <div class="f-row"><label>Descrição</label><input type="text" class="fi" id="qDesc" placeholder="Venda do dia..."></div>
+          <button class="btn-lan" style="background:var(--verde-e);" onclick="vendaRapida()">💚 Lançar Receita</button>
+        </div>
+        <div style="border-top:1.5px solid #FFD5D5;padding-top:12px;margin-top:12px;">
+          <div class="sec-title" style="color:var(--vermelho);">🔴 Despesa rápida</div>
+          <div class="f-row"><label>Descrição</label><input type="text" class="fi" id="dDesc" placeholder="Ex.: Compra de polpa, gelo..."></div>
+          <div class="form-2col">
+            <div class="f-row"><label>Valor (R$)</label><input type="number" class="fi" id="dVal" placeholder="0,00" step="0.01"></div>
+            <div class="f-row"><label>Categoria</label>
+              <select class="fi" id="dCat">
+                <option value="fornecedor">Fornecedor</option>
+                <option value="embalagem">Embalagens</option>
+                <option value="energia">Energia/Água/Gás</option>
+                <option value="funcionario">Funcionário</option>
+                <option value="aluguel">Aluguel</option>
+                <option value="equipamento">Equipamento</option>
+                <option value="imposto">Imposto/Taxa</option>
+                <option value="outros">Outros</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-lan" style="background:var(--vermelho);" onclick="despesaRapida()">🔴 Registrar Despesa</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== FECHAMENTO ====== -->
+<div id="tab-fechamento" class="page">
+  <div class="meses-nav">
+    <button class="btn-mes" onclick="navMes(-1)">◀ Anterior</button>
+    <div class="mes-label" id="mesLabel"></div>
+    <button class="btn-mes" onclick="navMes(1)">Próximo ▶</button>
+  </div>
+  <div id="fechConteudo"></div>
+</div>
+
+<!-- ====== ANUAL ====== -->
+<div id="tab-anual" class="page">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
+    <div style="font-size:1rem;font-weight:800;">📈 Prestação de Contas Anual</div>
+    <select id="anoSel" class="fi" style="width:auto;padding:6px 12px;" onchange="renderAnual()"></select>
+    <button class="btn-exportar" onclick="exportarAnual()">📄 Exportar TXT</button>
+  </div>
+  <div id="anualConteudo"></div>
+</div>
+
+<!-- ====== CONFIG ====== -->
+<div id="tab-config" class="page">
+  <div class="cfg-section">
+    <h3>⚙️ Configurações Gerais</h3>
+    <div class="cfg-row"><div><div class="cfg-lbl">Nome do estabelecimento</div></div><input type="text" id="cfgNome"></div>
+    <div class="cfg-row"><div><div class="cfg-lbl">Taxa de entrega (R$)</div></div><input type="number" id="cfgTaxa" step="0.5"></div>
+    <div class="cfg-row"><div><div class="cfg-lbl">WhatsApp</div><div class="cfg-sub">Para envio de recibo</div></div><input type="text" id="cfgWpp"></div>
+    <button class="btn-save" onclick="salvarCfg()">💾 Salvar configurações</button>
+  </div>
+  <div class="cfg-section">
+    <h3>🍇 Produtos por Kg</h3>
+    <div id="prodCfgLista"></div>
+    <button class="btn-add-p" onclick="addProdCfg()">+ Novo produto</button>
+  </div>
+  <div class="cfg-section">
+    <h3>🧃 Adicionais fixos</h3>
+    <div id="adicCfgLista"></div>
+    <button class="btn-add-p" onclick="addAdicCfg()">+ Novo adicional</button>
+  </div>
+  <div class="cfg-section" style="border:1.5px solid #FFD5D5;">
+    <h3 style="color:var(--vermelho);">🗑️ Zerar dados</h3>
+    <button onclick="zerarVendas()" style="background:var(--vermelho);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.82rem;margin-bottom:8px;">Apagar histórico de vendas</button><br>
+    <button onclick="zerarLancamentos()" style="background:var(--vermelho);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.82rem;margin-top:8px;">Apagar lançamentos financeiros</button>
+  </div>
+</div>
+
+<!-- MODAL RECIBO -->
+<div class="modal-ov" id="modalRec">
+  <div class="modal">
+    <div style="font-size:.67rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:11px;">🧾 Recibo da Venda</div>
+    <div class="recibo-txt" id="reciboTxt"></div>
+    <div class="modal-btns">
+      <button class="btn-wpp" onclick="envWpp()">📲 WhatsApp</button>
+      <button class="btn-fch" onclick="fecharModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ============================================================
+  FIREBASE SDK
+============================================================ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, push, remove, update, onValue, get }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ── CONFIG ──────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyARl7wkkn3UVffD2fGjGrs2NZ-fY6zJOe4",
+  authDomain: "nacai-pdv.firebaseapp.com",
+  databaseURL: "https://nacai-pdv-default-rtdb.firebaseio.com",
+  projectId: "nacai-pdv",
+  storageBucket: "nacai-pdv.firebasestorage.app",
+  messagingSenderId: "78026420919",
+  appId: "1:78026420919:web:e1d8cd9d1a8c6d32639332"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+// ── ESTADO LOCAL ─────────────────────────────────────────────
+let vendas       = {};   // objeto keyed por firebaseKey
+let lancamentos  = {};
+let cfg = {
+  nome:'Naçaí', taxa:3.00, wpp:'85900000000', numPed:1,
+  produtos:[
+    {id:1,nome:'Açaí Tradicional',emoji:'🍇',preco:28},
+    {id:2,nome:'Açaí Premium',emoji:'💜',preco:35},
+    {id:3,nome:'Açaí c/ Frutas',emoji:'🍓',preco:32},
+    {id:4,nome:'Sorvete Kg',emoji:'🍦',preco:30}
+  ],
+  adicionais:[
+    {id:1,nome:'Copo 300ml',emoji:'🥤',preco:2},
+    {id:2,nome:'Copo 500ml',emoji:'🥤',preco:3},
+    {id:3,nome:'Granola extra',emoji:'🌾',preco:2},
+    {id:4,nome:'Leite em pó',emoji:'🥛',preco:1.5},
+    {id:5,nome:'Calda morango',emoji:'🍓',preco:2}
+  ]
+};
+
+let st = { dig:'', prodSel:null, itens:[], tipo:'balcao', pagamentos:{}, pagAtivo:null, vendaAtual:null };
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+let mesFech=new Date().getMonth(), anoFech=new Date().getFullYear();
+let filtFinAtivo='todos';
+
+// ── HELPERS ──────────────────────────────────────────────────
+const fmt=v=>(v||0).toFixed(2).replace('.',',');
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const catEmoji={vendas:'🛒',fornecedor:'📦',aluguel:'🏠',funcionario:'👤',energia:'⚡',embalagem:'🗂',equipamento:'🔧',imposto:'📋',marketing:'📣',outros:'📌'};
+
+function toast(msg,tipo){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show '+(tipo||'');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+function setSyncDot(state){
+  const d=document.getElementById('syncDot');
+  if(d){ d.className='sync-dot '+(state==='ok'?'ok':'sync'); }
+}
+
+// ── FIREBASE LISTENERS (tempo real) ──────────────────────────
+function iniciarListeners(){
+  // CONFIG
+  onValue(ref(db,'config'), snap=>{
+    if(snap.exists()){
+      cfg={...cfg,...snap.val()};
+      renderProd();
+      atualizarSaldoHeader();
+      const cn=document.getElementById('cfgNome');
+      if(cn) cn.value=cfg.nome;
+    }
+    document.getElementById('loadingOv').style.display='none';
+    document.getElementById('statusFb').textContent='● Online';
+    document.getElementById('statusFb').className='ok';
+  },{onlyOnce:false});
+
+  // VENDAS
+  onValue(ref(db,'vendas'), snap=>{
+    vendas={};
+    if(snap.exists()) vendas=snap.val();
+    const tabAtiva=document.querySelector('.tab.active');
+    if(tabAtiva && tabAtiva.textContent.includes('Pedidos')) renderHist(filtAtivo||'todos');
+    atualizarSaldoHeader();
+    setSyncDot('ok');
+  });
+
+  // LANÇAMENTOS
+  onValue(ref(db,'lancamentos'), snap=>{
+    lancamentos={};
+    if(snap.exists()) lancamentos=snap.val();
+    const tabAtiva=document.querySelector('.tab.active');
+    if(tabAtiva && tabAtiva.textContent.includes('Financeiro')){ renderLancamentos(filtFinAtivo); renderFinResumo(); }
+    atualizarSaldoHeader();
+    setSyncDot('ok');
+  });
+}
+
+// ── SALVAR CONFIG ─────────────────────────────────────────────
+async function salvarCfgFb(){
+  setSyncDot('sync');
+  await set(ref(db,'config'), cfg);
+  setSyncDot('ok');
+}
+
+// ── RELÓGIO ──────────────────────────────────────────────────
+function tick(){ document.getElementById('relogio').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+setInterval(tick,1000); tick();
+
+function atualizarSaldoHeader(){
+  const hoje=new Date().toDateString();
+  const vs=Object.values(vendas).filter(v=>new Date(v.data).toDateString()===hoje);
+  const total=vs.reduce((a,v)=>a+v.total,0);
+  document.getElementById('saldo-header').textContent='💰 Hoje: R$ '+fmt(total);
+}
+
+// ── TABS ─────────────────────────────────────────────────────
+window.irTab=function(nome,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+nome).classList.add('active');
+  if(el) el.classList.add('active');
+  if(nome==='historico') renderHist('todos');
+  if(nome==='financeiro'){ filtFin('todos',document.querySelector('#tab-financeiro .f-btn')); renderFinResumo(); }
+  if(nome==='fechamento') renderFechamento();
+  if(nome==='anual') initAnual();
+  if(nome==='config') renderCfg();
+};
+
+// ── BALANÇA ──────────────────────────────────────────────────
+window.dg=function(d){ if(st.dig.length>=6)return; st.dig+=d; updPeso(); };
+window.bk=function(){ st.dig=st.dig.slice(0,-1); updPeso(); };
+window.pr=function(g){ st.dig=String(g).padStart(3,'0'); updPeso(); };
+function updPeso(){ const kg=(parseInt(st.dig||'0',10)||0)/1000; document.getElementById('pesoDisplay').textContent=kg.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}); }
+function getPesoKg(){ return (parseInt(st.dig||'0',10)||0)/1000; }
+
+// ── PRODUTOS ─────────────────────────────────────────────────
+function renderProd(){
+  const g=document.getElementById('prodGrid');
+  if(!g)return;
+  g.innerHTML=(cfg.produtos||[]).map(p=>`<button class="prod-btn ${st.prodSel?.id===p.id?'sel':''}" onclick="selProd(${p.id})"><span class="prod-emoji">${p.emoji}</span><div class="prod-nome">${p.nome}</div><div class="prod-preco">R$ ${fmt(p.preco)}/kg</div></button>`).join('');
+  const ga=document.getElementById('adicGrid');
+  if(!ga)return;
+  ga.innerHTML=(cfg.adicionais||[]).map(a=>`<button class="adic-btn" onclick="addAdic(${a.id})"><span class="adic-emoji">${a.emoji}</span>${a.nome}<br><strong style="color:var(--roxo)">R$${fmt(a.preco)}</strong></button>`).join('');
+}
+window.selProd=function(id){ st.prodSel=(cfg.produtos||[]).find(p=>p.id===id); renderProd(); };
+window.addKg=function(){
+  if(!st.prodSel){ toast('Selecione um produto','vermelho'); return; }
+  const peso=getPesoKg();
+  if(peso<=0){ toast('Informe o peso','vermelho'); return; }
+  st.itens.push({id:Date.now(),tipo:'kg',nome:st.prodSel.nome,peso,preco:st.prodSel.preco,subtotal:peso*st.prodSel.preco});
+  st.dig=''; updPeso(); renderItens(); toast(st.prodSel.nome+' adicionado ✓','verde');
+};
+window.addAdic=function(id){
+  const a=(cfg.adicionais||[]).find(x=>x.id===id); if(!a)return;
+  st.itens.push({id:Date.now(),tipo:'adicional',nome:a.nome,preco:a.preco,subtotal:a.preco});
+  renderItens(); toast(a.nome+' adicionado ✓','verde');
+};
+window.rmItem=function(id){ st.itens=st.itens.filter(i=>i.id!==id); renderItens(); };
+
+function renderItens(){
+  const el=document.getElementById('itensList');
+  if(!st.itens.length){ el.innerHTML='<div class="empty-cart">Nenhum item.<br>Selecione um produto e informe o peso.</div>'; updTot(); return; }
+  el.innerHTML=st.itens.map(i=>`<div class="item-row"><div class="item-info"><div class="item-nome">${i.nome}</div><div class="item-det">${i.tipo==='kg'?(i.peso*1000).toFixed(0)+'g × R$'+fmt(i.preco)+'/kg':'Adicional'}</div></div><div class="item-val">R$ ${fmt(i.subtotal)}</div><button class="btn-rm" onclick="rmItem(${i.id})">✕</button></div>`).join('');
+  updTot();
+}
+
+// ── TOTAIS ───────────────────────────────────────────────────
+function getTotal(){ return st.itens.reduce((a,i)=>a+i.subtotal,0)+(st.tipo==='delivery'?cfg.taxa:0); }
+function updTot(){
+  const sub=st.itens.reduce((a,i)=>a+i.subtotal,0);
+  const taxa=st.tipo==='delivery'?cfg.taxa:0;
+  document.getElementById('tSub').textContent='R$ '+fmt(sub);
+  document.getElementById('tGeral').textContent='R$ '+fmt(sub+taxa);
+  document.getElementById('tTaxaRow').style.display=taxa>0?'flex':'none';
+  document.getElementById('tTaxa').textContent='R$ '+fmt(taxa);
+  atualizarPagResumo();
+}
+
+// ── TIPO ─────────────────────────────────────────────────────
+window.setTipo=function(t,btn){
+  st.tipo=t;
+  document.querySelectorAll('.tipo-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+  document.getElementById('delForm').classList.toggle('show',t!=='balcao');
+  document.getElementById('fEndRow').style.display=t==='delivery'?'block':'none';
+  updTot();
+};
+
+// ── PAGAMENTO MISTO ──────────────────────────────────────────
+window.togglePag=function(forma,btn){
+  if(st.pagamentos[forma]!==undefined){
+    delete st.pagamentos[forma];
+    btn.classList.remove('active');
+    const badge=document.getElementById('b'+cap(forma));
+    if(badge){ badge.style.display='none'; badge.textContent=''; }
+    if(st.pagAtivo===forma){ st.pagAtivo=null; document.getElementById('pagEntrada').classList.remove('show'); }
+    atualizarPagResumo(); return;
+  }
+  st.pagAtivo=forma;
+  const nomes={dinheiro:'💵 Valor em Dinheiro',pix:'📱 Valor no PIX',credito:'💳 Valor no Crédito',debito:'💳 Valor no Débito'};
+  document.getElementById('pagEntradaTitulo').textContent=nomes[forma];
+  const falta=getFalta();
+  const inp=document.getElementById('pagValorInput');
+  inp.value=falta>0?falta.toFixed(2):'';
+  document.getElementById('pagSug').textContent=falta>0?'Sugestão: R$ '+fmt(falta)+' (restante)':'';
+  document.getElementById('pagEntrada').classList.add('show');
+  inp.focus(); inp.select();
+  previewPag();
+};
+window.previewPag=function(){
+  const v=parseFloat(document.getElementById('pagValorInput').value)||0;
+  const falta=getTotal()-getTotalPago()-v;
+  document.getElementById('pagSug').textContent=falta>0.005?'Ainda faltará: R$ '+fmt(falta):v-(getTotal()-getTotalPago())>0.005?'Troco: R$ '+fmt(v-(getTotal()-getTotalPago())):'✓ Valor exato';
+};
+window.confirmarPag=function(){
+  const forma=st.pagAtivo; if(!forma)return;
+  const v=parseFloat(document.getElementById('pagValorInput').value)||0;
+  if(v<=0){ toast('Informe um valor válido','vermelho'); return; }
+  st.pagamentos[forma]=v;
+  const btn=document.getElementById('pb'+cap(forma)); btn.classList.add('active');
+  const badge=document.getElementById('b'+cap(forma));
+  if(badge){ badge.textContent='R$'+fmt(v); badge.style.display='inline'; }
+  st.pagAtivo=null;
+  document.getElementById('pagEntrada').classList.remove('show');
+  document.getElementById('pagValorInput').value='';
+  atualizarPagResumo();
+};
+function getFalta(){ return Math.max(0,getTotal()-getTotalPago()); }
+function getTotalPago(){ return Object.values(st.pagamentos).reduce((a,v)=>a+v,0); }
+function atualizarPagResumo(){
+  const formas=Object.keys(st.pagamentos);
+  const total=getTotal();
+  const totalPago=getTotalPago();
+  const falta=total-totalPago;
+  const troco=totalPago-total;
+  document.getElementById('pagMistoLabel').style.display=formas.length>1?'inline':'none';
+  const resumoEl=document.getElementById('pagResumo');
+  const nomes={dinheiro:'💵 Dinheiro',pix:'📱 PIX',credito:'💳 Crédito',debito:'💳 Débito'};
+  if(formas.length>0){
+    let html=formas.map(f=>`<div class="pag-resumo-item"><span>${nomes[f]}</span><span style="font-weight:700">R$ ${fmt(st.pagamentos[f])}</span></div>`).join('');
+    if(formas.length>1) html+=`<div class="pag-resumo-item" style="font-weight:800"><span>Total pago</span><span>R$ ${fmt(totalPago)}</span></div>`;
+    resumoEl.innerHTML=html; resumoEl.classList.add('show');
+  } else { resumoEl.innerHTML=''; resumoEl.classList.remove('show'); }
+  document.getElementById('pagFalta').classList.toggle('show',formas.length>0&&falta>0.005);
+  document.getElementById('pagFaltaVal').textContent='R$ '+fmt(falta);
+  document.getElementById('pagTroco').classList.toggle('show',formas.length>0&&troco>0.005);
+  document.getElementById('pagTrocoVal').textContent='R$ '+fmt(troco);
+}
+
+// ── FINALIZAR VENDA ──────────────────────────────────────────
+window.finalizarVenda=async function(){
+  if(!st.itens.length){ toast('Adicione itens','vermelho'); return; }
+  const nome=document.getElementById('fNome').value.trim();
+  if((st.tipo==='delivery'||st.tipo==='retirada')&&!nome){ toast('Informe o nome do cliente','vermelho'); return; }
+  const formasPag=Object.keys(st.pagamentos);
+  if(formasPag.length===0){ toast('Selecione a forma de pagamento','vermelho'); return; }
+  const totalPago=getTotalPago();
+  const total=getTotal();
+  if(totalPago<total-0.005){ toast('Falta R$ '+fmt(total-totalPago)+' para cobrir o total','vermelho'); return; }
+  const nomePag={dinheiro:'Dinheiro',pix:'PIX',credito:'Crédito',debito:'Débito'};
+  const pagDesc=formasPag.length===1?nomePag[formasPag[0]]:formasPag.map(f=>nomePag[f]+' R$'+fmt(st.pagamentos[f])).join(' + ');
+  setSyncDot('sync');
+  const v={
+    numero:cfg.numPed||1,
+    data:new Date().toISOString(),
+    tipo:st.tipo, pag:pagDesc, pagamentos:{...st.pagamentos}, troco:Math.max(0,totalPago-total),
+    cliente:nome||'Balcão',
+    tel:document.getElementById('fTel').value.trim(),
+    end:document.getElementById('fEnd').value.trim(),
+    obs:document.getElementById('fObs').value.trim(),
+    itens:[...st.itens],
+    subtotal:st.itens.reduce((a,i)=>a+i.subtotal,0),
+    taxa:st.tipo==='delivery'?cfg.taxa:0,
+    total
+  };
+  const vendaRef=await push(ref(db,'vendas'), v);
+  // lançamento automático
+  await push(ref(db,'lancamentos'),{
+    tipo:'receber', desc:'Venda PDV #'+String(v.numero).padStart(3,'0')+' ('+v.cliente+')',
+    valor:v.total, data:v.data, venc:v.data, cat:'vendas', obs:'', pago:true, auto:true
+  });
+  // incrementar numPed
+  cfg.numPed=(cfg.numPed||1)+1;
+  await set(ref(db,'config'), cfg);
+  setSyncDot('ok');
+  st.vendaAtual=v;
+  mostrarRecibo(v);
+  toast('Venda finalizada! 🎉','verde');
+  limpar(true);
+  document.getElementById('numPed').textContent=String(cfg.numPed).padStart(3,'0');
+};
+
+// ── RECIBO ───────────────────────────────────────────────────
+function mostrarRecibo(v){
+  const d=new Date(v.data);
+  const ds=d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const tl={balcao:'Balcão',delivery:'Delivery 🛵',retirada:'Retirada 📦'}[v.tipo];
+  let t=`================================\n         ${cfg.nome.toUpperCase()}\n================================\nPedido #${String(v.numero).padStart(3,'0')} — ${ds}\nTipo: ${tl}\n`;
+  if(v.cliente!=='Balcão') t+=`Cliente: ${v.cliente}\n`;
+  if(v.tel) t+=`Tel: ${v.tel}\n`;
+  if(v.end) t+=`End: ${v.end}\n`;
+  if(v.obs) t+=`Obs: ${v.obs}\n`;
+  t+='--------------------------------\n';
+  (v.itens||[]).forEach(i=>{ t+=i.tipo==='kg'?`${i.nome}\n  ${(i.peso*1000).toFixed(0)}g × R$${fmt(i.preco)}/kg = R$${fmt(i.subtotal)}\n`:`${i.nome} = R$${fmt(i.subtotal)}\n`; });
+  t+='--------------------------------\n';
+  t+=`Subtotal:  R$ ${fmt(v.subtotal)}\n`;
+  if(v.taxa>0) t+=`Entrega:   R$ ${fmt(v.taxa)}\n`;
+  t+=`TOTAL:     R$ ${fmt(v.total)}\nPagamento: ${v.pag}\n`;
+  if(v.troco>0.005) t+=`Troco:     R$ ${fmt(v.troco)}\n`;
+  t+=`================================\n   Obrigada pela preferência! 💜\n================================`;
+  document.getElementById('reciboTxt').textContent=t;
+  document.getElementById('modalRec').classList.add('show');
+}
+window.envWpp=function(){
+  if(!st.vendaAtual)return;
+  const tel=st.vendaAtual.tel?st.vendaAtual.tel.replace(/\D/g,''):cfg.wpp;
+  window.open('https://wa.me/55'+tel+'?text='+encodeURIComponent(document.getElementById('reciboTxt').textContent),'_blank');
+};
+window.fecharModal=function(){ document.getElementById('modalRec').classList.remove('show'); };
+window.mostrarReciboNum=function(key){ const v=vendas[key]; if(!v)return; st.vendaAtual=v; mostrarRecibo(v); };
+
+window.limpar=function(manterId){
+  st.itens=[]; st.dig=''; st.prodSel=null; st.pagamentos={}; st.pagAtivo=null;
+  if(!manterId) st.tipo='balcao';
+  updPeso(); renderItens(); renderProd();
+  ['fNome','fTel','fEnd','fObs','pagValorInput'].forEach(id=>{ const el=document.getElementById(id); if(el)el.value=''; });
+  document.getElementById('delForm').classList.remove('show');
+  document.querySelectorAll('.tipo-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  ['pbDinheiro','pbPix','pbCredito','pbDebito'].forEach(id=>{ const b=document.getElementById(id); if(b)b.classList.remove('active'); });
+  ['bDinheiro','bPix','bCredito','bDebito'].forEach(id=>{ const b=document.getElementById(id); if(b){b.style.display='none';b.textContent='';} });
+  document.getElementById('pagEntrada').classList.remove('show');
+  document.getElementById('pagResumo').classList.remove('show');
+  document.getElementById('pagFalta').classList.remove('show');
+  document.getElementById('pagTroco').classList.remove('show');
+  document.getElementById('pagMistoLabel').style.display='none';
+  if(!manterId) st.tipo='balcao';
+  updTot();
+};
+
+// ── HISTÓRICO ────────────────────────────────────────────────
+let filtAtivo='todos';
+window.filt=function(f,btn){
+  filtAtivo=f;
+  document.querySelectorAll('#tab-historico .f-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+  renderHist(f);
+};
+function renderHist(f){
+  let vs=Object.entries(vendas).map(([k,v])=>({...v,_key:k})).sort((a,b)=>new Date(b.data)-new Date(a.data));
+  const hoje=new Date().toDateString();
+  if(f==='hoje') vs=vs.filter(v=>new Date(v.data).toDateString()===hoje);
+  else if(f==='semana'){ const d7=new Date(); d7.setDate(d7.getDate()-7); vs=vs.filter(v=>new Date(v.data)>=d7); }
+  else if(f!=='todos') vs=vs.filter(v=>v.tipo===f);
+  const el=document.getElementById('histLista');
+  if(!vs.length){ el.innerHTML='<div style="text-align:center;color:var(--cinza);padding:40px;">Nenhuma venda encontrada.</div>'; return; }
+  const tl={balcao:'🏪 Balcão',delivery:'🛵 Delivery',retirada:'📦 Retirada'};
+  const bc={balcao:'b-balcao',delivery:'b-delivery',retirada:'b-retirada'};
+  const pl={dinheiro:'💵',pix:'📱',credito:'💳',debito:'💳'};
+  el.innerHTML=vs.map(v=>{
+    const d=new Date(v.data);
+    const pagIcon=v.pag&&v.pag.includes('+')?'💳+':pl[Object.keys(v.pagamentos||{})[0]]||'💳';
+    return `<div class="venda-card">
+      <div class="venda-num">#${String(v.numero).padStart(3,'0')}</div>
+      <div class="venda-info">
+        <div class="venda-cli">${v.cliente} ${pagIcon}</div>
+        <div class="venda-det">${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${(v.itens||[]).length} item(s)</div>
+        <div style="margin-top:3px"><span class="badge ${bc[v.tipo]||''}">${tl[v.tipo]||v.tipo}</span></div>
+      </div>
+      <div>
+        <div class="venda-val">R$ ${fmt(v.total)}</div>
+        <button onclick="mostrarReciboNum('${v._key}')" style="font-size:.68rem;color:var(--roxo);background:none;border:none;cursor:pointer;margin-top:3px;">🧾 Recibo</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── FINANCEIRO ───────────────────────────────────────────────
+let lanTipo='receber';
+window.setLanTipo=function(t){
+  lanTipo=t;
+  document.getElementById('btnLanR').classList.toggle('active',t==='receber');
+  document.getElementById('btnLanP').classList.toggle('active',t==='pagar');
+};
+window.novoLancamento=async function(){
+  const desc=document.getElementById('lDesc').value.trim();
+  const val=parseFloat(document.getElementById('lVal').value);
+  const venc=document.getElementById('lVenc').value;
+  const cat=document.getElementById('lCat').value;
+  const obs=document.getElementById('lObs').value.trim();
+  const pago=document.getElementById('lPago').checked;
+  if(!desc||!val||val<=0){ toast('Preencha descrição e valor','vermelho'); return; }
+  setSyncDot('sync');
+  await push(ref(db,'lancamentos'),{tipo:lanTipo,desc,valor:val,data:new Date().toISOString(),venc:venc||new Date().toISOString().split('T')[0],cat,obs,pago,auto:false});
+  setSyncDot('ok');
+  ['lDesc','lVal','lVenc','lObs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('lPago').checked=false;
+  toast('Lançamento salvo ✓','verde');
+};
+window.vendaRapida=async function(){
+  const val=parseFloat(document.getElementById('qVal').value);
+  const data=document.getElementById('qData').value;
+  const desc=document.getElementById('qDesc').value.trim()||'Venda do dia';
+  if(!val||val<=0){ toast('Informe o valor','vermelho'); return; }
+  setSyncDot('sync');
+  await push(ref(db,'lancamentos'),{tipo:'receber',desc,valor:val,data:data?data+'T12:00:00.000Z':new Date().toISOString(),venc:data||new Date().toISOString().split('T')[0],cat:'vendas',obs:'',pago:true,auto:false});
+  setSyncDot('ok');
+  ['qVal','qData','qDesc'].forEach(id=>document.getElementById(id).value='');
+  toast('Receita lançada ✓','verde');
+};
+window.despesaRapida=async function(){
+  const desc=document.getElementById('dDesc').value.trim();
+  const val=parseFloat(document.getElementById('dVal').value);
+  const cat=document.getElementById('dCat').value;
+  if(!desc){ toast('Informe a descrição','vermelho'); return; }
+  if(!val||val<=0){ toast('Informe o valor','vermelho'); return; }
+  setSyncDot('sync');
+  await push(ref(db,'lancamentos'),{tipo:'pagar',desc,valor:val,data:new Date().toISOString(),venc:new Date().toISOString().split('T')[0],cat,obs:'',pago:true,auto:false});
+  setSyncDot('ok');
+  ['dDesc','dVal'].forEach(id=>document.getElementById(id).value='');
+  toast('Despesa registrada ✓','verde');
+};
+window.pagarLancamento=async function(key){
+  setSyncDot('sync');
+  await update(ref(db,'lancamentos/'+key),{pago:true});
+  setSyncDot('ok');
+  toast('Marcado como pago ✓','verde');
+};
+window.deletarLancamento=async function(key){
+  if(!confirm('Remover este lançamento?'))return;
+  setSyncDot('sync');
+  await remove(ref(db,'lancamentos/'+key));
+  setSyncDot('ok');
+};
+window.filtFin=function(f,btn){
+  filtFinAtivo=f;
+  if(btn){ document.querySelectorAll('#tab-financeiro .f-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  renderLancamentos(f); renderFinResumo();
+};
+const statusLan=l=>{
+  if(l.pago) return {label:'Pago/Recebido',cls:'s-pago'};
+  const v=new Date(l.venc+'T23:59:59');
+  return v<new Date()?{label:'Vencido',cls:'s-vencido'}:{label:'Pendente',cls:'s-pendente'};
+};
+function renderLancamentos(f){
+  let ls=Object.entries(lancamentos).map(([k,l])=>({...l,_key:k})).sort((a,b)=>new Date(b.data)-new Date(a.data));
+  const hoje=new Date().toDateString();
+  if(f==='receber') ls=ls.filter(l=>l.tipo==='receber');
+  else if(f==='pagar') ls=ls.filter(l=>l.tipo==='pagar');
+  else if(f==='pendente') ls=ls.filter(l=>!l.pago);
+  else if(f==='vencido') ls=ls.filter(l=>{ if(l.pago)return false; const v=new Date(l.venc+'T23:59:59'); return v<new Date(); });
+  else if(f==='hoje') ls=ls.filter(l=>new Date(l.data).toDateString()===hoje);
+  const el=document.getElementById('lanLista');
+  if(!ls.length){ el.innerHTML='<div style="text-align:center;color:var(--cinza);padding:40px;">Nenhum lançamento aqui.</div>'; return; }
+  el.innerHTML=ls.map(l=>{
+    const st2=statusLan(l);
+    const d=new Date(l.data);
+    const vd=new Date(l.venc+'T12:00:00');
+    return `<div class="lan-item">
+      <div class="lan-ico ${l.tipo==='receber'?'r':'p'}">${catEmoji[l.cat]||'📌'}</div>
+      <div class="lan-info">
+        <div class="lan-desc">${l.desc} <span class="lan-status ${st2.cls}">${st2.label}</span></div>
+        <div class="lan-meta">${d.toLocaleDateString('pt-BR')} · Venc: ${vd.toLocaleDateString('pt-BR')} · ${l.cat}${l.obs?' · '+l.obs:''}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="${l.tipo==='receber'?'lan-val-r':'lan-val-p'}">${l.tipo==='receber'?'+':'-'} R$ ${fmt(l.valor)}</div>
+        <div style="margin-top:5px;display:flex;gap:5px;justify-content:flex-end;">
+          ${!l.pago?`<button class="btn-pagar" onclick="pagarLancamento('${l._key}')">✓ Marcar pago</button>`:''}
+          <button class="btn-del-lan" onclick="deletarLancamento('${l._key}')">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderFinResumo(){
+  const ls=Object.values(lancamentos);
+  const recTotal=ls.filter(l=>l.tipo==='receber'&&l.pago).reduce((a,l)=>a+l.valor,0);
+  const pagTotal=ls.filter(l=>l.tipo==='pagar'&&l.pago).reduce((a,l)=>a+l.valor,0);
+  const recPend=ls.filter(l=>l.tipo==='receber'&&!l.pago).reduce((a,l)=>a+l.valor,0);
+  const pagPend=ls.filter(l=>l.tipo==='pagar'&&!l.pago).reduce((a,l)=>a+l.valor,0);
+  const saldo=recTotal-pagTotal;
+  document.getElementById('finResumo').innerHTML=`
+    <div class="res-card r"><div class="res-lbl">Total Recebido</div><div class="res-val">R$ ${fmt(recTotal)}</div><div class="res-sub">A receber: R$ ${fmt(recPend)}</div></div>
+    <div class="res-card p"><div class="res-lbl">Total Pago</div><div class="res-val">R$ ${fmt(pagTotal)}</div><div class="res-sub">A pagar: R$ ${fmt(pagPend)}</div></div>
+    <div class="res-card s"><div class="res-lbl">Saldo Líquido</div><div class="res-val">R$ ${fmt(saldo)}</div><div class="res-sub">${saldo>=0?'Positivo ✓':'Atenção ⚠️'}</div></div>`;
+}
+
+// ── FECHAMENTO MENSAL ─────────────────────────────────────────
+window.navMes=function(d){ mesFech+=d; if(mesFech>11){mesFech=0;anoFech++;}if(mesFech<0){mesFech=11;anoFech--;} renderFechamento(); };
+function renderFechamento(){
+  document.getElementById('mesLabel').textContent=MESES[mesFech]+' / '+anoFech;
+  const lancMes=Object.values(lancamentos).filter(l=>{ const d=new Date(l.data); return d.getMonth()===mesFech&&d.getFullYear()===anoFech; });
+  const vendasMes=Object.values(vendas).filter(v=>{ const d=new Date(v.data); return d.getMonth()===mesFech&&d.getFullYear()===anoFech; });
+  const rec=lancMes.filter(l=>l.tipo==='receber'&&l.pago).reduce((a,l)=>a+l.valor,0);
+  const recPend=lancMes.filter(l=>l.tipo==='receber'&&!l.pago).reduce((a,l)=>a+l.valor,0);
+  const pag=lancMes.filter(l=>l.tipo==='pagar'&&l.pago).reduce((a,l)=>a+l.valor,0);
+  const pagPend=lancMes.filter(l=>l.tipo==='pagar'&&!l.pago).reduce((a,l)=>a+l.valor,0);
+  const saldo=rec-pag;
+  const vTotal=vendasMes.reduce((a,v)=>a+v.total,0);
+  const vBal=vendasMes.filter(v=>v.tipo==='balcao').reduce((a,v)=>a+v.total,0);
+  const vDel=vendasMes.filter(v=>v.tipo==='delivery').reduce((a,v)=>a+v.total,0);
+  const vRet=vendasMes.filter(v=>v.tipo==='retirada').reduce((a,v)=>a+v.total,0);
+  const catsPag={};
+  lancMes.filter(l=>l.tipo==='pagar'&&l.pago).forEach(l=>{ catsPag[l.cat]=(catsPag[l.cat]||0)+l.valor; });
+  const catsCols=Object.entries(catsPag).map(([c,v])=>`<div class="fec-linha"><span>${catEmoji[c]||'📌'} ${c}</span><span>R$ ${fmt(v)}</span></div>`).join('');
+  document.getElementById('fechConteudo').innerHTML=`
+    <div class="fechamento-grid">
+      <div class="fec-bloco">
+        <div class="fec-titulo" style="color:var(--verde-e)">💚 Receitas</div>
+        <div class="fec-linha bold verde"><span>Total recebido</span><span>R$ ${fmt(rec)}</span></div>
+        <div class="fec-linha"><span>A receber</span><span>R$ ${fmt(recPend)}</span></div>
+        <div style="margin-top:8px;font-size:.7rem;font-weight:700;color:var(--cinza);margin-bottom:4px;">VENDAS PDV</div>
+        <div class="fec-linha"><span>🏪 Balcão</span><span>R$ ${fmt(vBal)}</span></div>
+        <div class="fec-linha"><span>🛵 Delivery</span><span>R$ ${fmt(vDel)}</span></div>
+        <div class="fec-linha"><span>📦 Retirada</span><span>R$ ${fmt(vRet)}</span></div>
+        <div class="fec-linha bold verde"><span>Total PDV</span><span>R$ ${fmt(vTotal)}</span></div>
+        <div class="fec-linha"><span>Qtde pedidos</span><span>${vendasMes.length}</span></div>
+        <div class="fec-linha"><span>Ticket médio</span><span>R$ ${fmt(vendasMes.length?vTotal/vendasMes.length:0)}</span></div>
+      </div>
+      <div class="fec-bloco">
+        <div class="fec-titulo" style="color:var(--vermelho)">🔴 Despesas</div>
+        <div class="fec-linha bold vermelho"><span>Total pago</span><span>R$ ${fmt(pag)}</span></div>
+        <div class="fec-linha"><span>A pagar</span><span>R$ ${fmt(pagPend)}</span></div>
+        ${catsCols||'<div class="fec-linha" style="opacity:.5">Nenhuma despesa</div>'}
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="fec-linha big ${saldo>=0?'verde':'vermelho'}"><span>💰 RESULTADO DO MÊS</span><span>R$ ${fmt(saldo)}</span></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn-exportar" onclick="exportarMes()">📄 Exportar TXT</button>
+      <button class="btn-exportar verde-btn" onclick="whatsappMes()">📲 WhatsApp</button>
+    </div>`;
+}
+function textoFechamento(){
+  const lancMes=Object.values(lancamentos).filter(l=>{ const d=new Date(l.data); return d.getMonth()===mesFech&&d.getFullYear()===anoFech; });
+  const vendasMes=Object.values(vendas).filter(v=>{ const d=new Date(v.data); return d.getMonth()===mesFech&&d.getFullYear()===anoFech; });
+  const rec=lancMes.filter(l=>l.tipo==='receber'&&l.pago).reduce((a,l)=>a+l.valor,0);
+  const pag=lancMes.filter(l=>l.tipo==='pagar'&&l.pago).reduce((a,l)=>a+l.valor,0);
+  const vTotal=vendasMes.reduce((a,v)=>a+v.total,0);
+  const catsPag={};
+  lancMes.filter(l=>l.tipo==='pagar'&&l.pago).forEach(l=>{ catsPag[l.cat]=(catsPag[l.cat]||0)+l.valor; });
+  let t=`================================\n   FECHAMENTO: ${MESES[mesFech].toUpperCase()} ${anoFech}\n================================\nRECEITAS RECEBIDAS: R$ ${fmt(rec)}\nDESPESAS PAGAS:     R$ ${fmt(pag)}\nRESULTADO:          R$ ${fmt(rec-pag)}\n--------------------------------\nVENDAS PDV: R$ ${fmt(vTotal)} (${vendasMes.length} pedidos)\n--------------------------------\nDESPESAS POR CATEGORIA:\n`;
+  Object.entries(catsPag).forEach(([c,v])=>{ t+=`  ${c}: R$ ${fmt(v)}\n`; });
+  t+=`================================\n   Gerado por Naçaí PDV\n================================`;
+  return t;
+}
+window.exportarMes=function(){ const a=document.createElement('a'); a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(textoFechamento()); a.download=`fechamento_${MESES[mesFech]}_${anoFech}.txt`; a.click(); };
+window.whatsappMes=function(){ window.open('https://wa.me/55'+cfg.wpp+'?text='+encodeURIComponent(textoFechamento()),'_blank'); };
+
+// ── ANUAL ─────────────────────────────────────────────────────
+function initAnual(){
+  const anos=new Set([new Date().getFullYear()]);
+  Object.values(vendas).forEach(v=>anos.add(new Date(v.data).getFullYear()));
+  Object.values(lancamentos).forEach(l=>anos.add(new Date(l.data).getFullYear()));
+  const sel=document.getElementById('anoSel');
+  const cur=sel.value||new Date().getFullYear();
+  sel.innerHTML=[...anos].sort((a,b)=>b-a).map(a=>`<option value="${a}" ${a==cur?'selected':''}>${a}</option>`).join('');
+  renderAnual();
+}
+window.renderAnual=function(){
+  const ano=parseInt(document.getElementById('anoSel').value)||new Date().getFullYear();
+  let totalRec=0,totalPag=0;
+  const rows=MESES.map((mes,m)=>{
+    const ls=Object.values(lancamentos).filter(l=>{ const d=new Date(l.data); return d.getMonth()===m&&d.getFullYear()===ano; });
+    const vs=Object.values(vendas).filter(v=>{ const d=new Date(v.data); return d.getMonth()===m&&d.getFullYear()===ano; });
+    const rec=ls.filter(l=>l.tipo==='receber'&&l.pago).reduce((a,l)=>a+l.valor,0);
+    const pag=ls.filter(l=>l.tipo==='pagar'&&l.pago).reduce((a,l)=>a+l.valor,0);
+    totalRec+=rec; totalPag+=pag;
+    return {mes,rec,pag,ped:vs.length,saldo:rec-pag};
+  });
+  const totalSaldo=totalRec-totalPag;
+  document.getElementById('anualConteudo').innerHTML=`
+    <div class="stat-grid" style="margin-bottom:18px;">
+      <div class="stat verde"><div class="stat-lbl">Total Receitas ${ano}</div><div class="stat-val">R$ ${fmt(totalRec)}</div></div>
+      <div class="stat vermelho"><div class="stat-lbl">Total Despesas ${ano}</div><div class="stat-val">R$ ${fmt(totalPag)}</div></div>
+      <div class="stat ${totalSaldo>=0?'verde':'vermelho'}"><div class="stat-lbl">Resultado ${ano}</div><div class="stat-val">R$ ${fmt(totalSaldo)}</div></div>
+    </div>
+    <div class="card">
+      <table class="anual-tabela">
+        <thead><tr><th>Mês</th><th class="num">Receitas</th><th class="num">Despesas</th><th class="num">Resultado</th><th class="num">Pedidos</th><th></th></tr></thead>
+        <tbody>${rows.map((r,i)=>`<tr><td>${r.mes}</td><td class="num" style="color:var(--verde-e)">R$ ${fmt(r.rec)}</td><td class="num" style="color:var(--vermelho)">R$ ${fmt(r.pag)}</td><td class="num" style="font-weight:700;color:${r.saldo>=0?'var(--verde-e)':'var(--vermelho)'}">R$ ${fmt(r.saldo)}</td><td class="num">${r.ped}</td><td><button onclick="irFechMes(${i})" style="font-size:.68rem;color:var(--roxo);background:none;border:none;cursor:pointer;">Ver detalhes</button></td></tr>`).join('')}</tbody>
+        <tfoot><tr><td><strong>TOTAL</strong></td><td class="num">R$ ${fmt(totalRec)}</td><td class="num">R$ ${fmt(totalPag)}</td><td class="num">R$ ${fmt(totalSaldo)}</td><td class="num">${Object.values(vendas).filter(v=>new Date(v.data).getFullYear()===ano).length}</td><td></td></tr></tfoot>
+      </table>
+    </div>`;
+};
+window.irFechMes=function(m){ mesFech=m; anoFech=parseInt(document.getElementById('anoSel').value)||new Date().getFullYear(); irTab('fechamento',document.querySelectorAll('.tab')[3]); renderFechamento(); };
+window.exportarAnual=function(){
+  const ano=parseInt(document.getElementById('anoSel').value)||new Date().getFullYear();
+  let txt=`================================\n   PRESTAÇÃO DE CONTAS ${ano}\n================================\n        ${cfg.nome.toUpperCase()}\n================================\n`;
+  let tr=0,tp=0;
+  MESES.forEach((mes,m)=>{
+    const ls=Object.values(lancamentos).filter(l=>{ const d=new Date(l.data); return d.getMonth()===m&&d.getFullYear()===ano; });
+    const rec=ls.filter(l=>l.tipo==='receber'&&l.pago).reduce((a,l)=>a+l.valor,0);
+    const pag=ls.filter(l=>l.tipo==='pagar'&&l.pago).reduce((a,l)=>a+l.valor,0);
+    tr+=rec; tp+=pag;
+    txt+=`${mes}: Rec R$${fmt(rec)} | Pag R$${fmt(pag)} | Saldo R$${fmt(rec-pag)}\n`;
+  });
+  txt+=`================================\nTOTAL RECEITAS:  R$ ${fmt(tr)}\nTOTAL DESPESAS:  R$ ${fmt(tp)}\nRESULTADO ANUAL: R$ ${fmt(tr-tp)}\n================================\nGerado por Naçaí PDV`;
+  const a=document.createElement('a'); a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(txt); a.download=`prestacao_contas_${ano}.txt`; a.click();
+};
+
+// ── CONFIG ────────────────────────────────────────────────────
+function renderCfg(){
+  document.getElementById('cfgNome').value=cfg.nome;
+  document.getElementById('cfgTaxa').value=cfg.taxa;
+  document.getElementById('cfgWpp').value=cfg.wpp;
+  document.getElementById('prodCfgLista').innerHTML=(cfg.produtos||[]).map(p=>`<div class="prod-cfg-item"><input class="nm" value="${p.emoji} ${p.nome}" onchange="updProdCfg(${p.id},'nome',this.value)"><input type="number" value="${p.preco.toFixed(2)}" step="0.5" onchange="updProdCfg(${p.id},'preco',this.value)"><span style="font-size:.68rem;color:var(--cinza)">R$/kg</span><button class="btn-del-lan" onclick="delProdCfg(${p.id})">🗑</button></div>`).join('');
+  document.getElementById('adicCfgLista').innerHTML=(cfg.adicionais||[]).map(a=>`<div class="prod-cfg-item"><input class="nm" value="${a.emoji} ${a.nome}" onchange="updAdicCfg(${a.id},'nome',this.value)"><input type="number" value="${a.preco.toFixed(2)}" step="0.5" onchange="updAdicCfg(${a.id},'preco',this.value)"><span style="font-size:.68rem;color:var(--cinza)">R$ fixo</span><button class="btn-del-lan" onclick="delAdicCfg(${a.id})">🗑</button></div>`).join('');
+}
+window.updProdCfg=function(id,c,v){ const p=(cfg.produtos||[]).find(x=>x.id===id); if(!p)return; if(c==='nome'){const m=v.match(/^(\S+)\s+(.*)/);if(m){p.emoji=m[1];p.nome=m[2];}else p.nome=v;}else p[c]=parseFloat(v)||0; salvarCfgFb(); renderProd(); };
+window.updAdicCfg=function(id,c,v){ const a=(cfg.adicionais||[]).find(x=>x.id===id); if(!a)return; if(c==='nome'){const m=v.match(/^(\S+)\s+(.*)/);if(m){a.emoji=m[1];a.nome=m[2];}else a.nome=v;}else a[c]=parseFloat(v)||0; salvarCfgFb(); renderProd(); };
+window.delProdCfg=function(id){ cfg.produtos=(cfg.produtos||[]).filter(p=>p.id!==id); salvarCfgFb(); renderCfg(); renderProd(); };
+window.delAdicCfg=function(id){ cfg.adicionais=(cfg.adicionais||[]).filter(a=>a.id!==id); salvarCfgFb(); renderCfg(); renderProd(); };
+window.addProdCfg=function(){ cfg.produtos=cfg.produtos||[]; cfg.produtos.push({id:Date.now(),nome:'Novo Produto',emoji:'🍇',preco:30}); salvarCfgFb(); renderCfg(); renderProd(); };
+window.addAdicCfg=function(){ cfg.adicionais=cfg.adicionais||[]; cfg.adicionais.push({id:Date.now(),nome:'Novo Adicional',emoji:'➕',preco:2}); salvarCfgFb(); renderCfg(); renderProd(); };
+window.salvarCfg=async function(){
+  cfg.nome=document.getElementById('cfgNome').value||'Naçaí';
+  cfg.taxa=parseFloat(document.getElementById('cfgTaxa').value)||0;
+  cfg.wpp=document.getElementById('cfgWpp').value;
+  await salvarCfgFb();
+  toast('Configurações salvas ✓','verde');
+};
+window.zerarVendas=async function(){
+  if(!confirm('Apagar TODO o histórico de vendas? Isso não pode ser desfeito.'))return;
+  setSyncDot('sync');
+  await set(ref(db,'vendas'),null);
+  setSyncDot('ok');
+  toast('Histórico apagado','vermelho');
+};
+window.zerarLancamentos=async function(){
+  if(!confirm('Apagar TODOS os lançamentos financeiros?'))return;
+  setSyncDot('sync');
+  await set(ref(db,'lancamentos'),null);
+  setSyncDot('ok');
+  toast('Lançamentos apagados','vermelho');
+};
+
+// ── INIT ──────────────────────────────────────────────────────
+iniciarListeners();
+renderProd();
+renderItens();
+document.getElementById('lVenc').value=new Date().toISOString().split('T')[0];
+document.getElementById('qData').value=new Date().toISOString().split('T')[0];
+document.getElementById('numPed').textContent=String(cfg.numPed||1).padStart(3,'0');
+</script>
+</body>
+</html>
