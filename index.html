@@ -227,8 +227,40 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 .sync-dot.ok{background:var(--verde);}
 .sync-dot.sync{background:var(--amarelo);animation:pulse .8s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-/* RESPONSIVE */
-@media(max-width:768px){
+/* CAIXA */
+.caixa-status{border-radius:var(--r);padding:20px 24px;color:#fff;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.caixa-status.aberto{background:linear-gradient(135deg,var(--verde-e),var(--verde));}
+.caixa-status.fechado{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));}
+.caixa-status-lbl{font-size:.7rem;opacity:.85;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.caixa-status-val{font-size:1.6rem;font-weight:800;}
+.caixa-status-sub{font-size:.72rem;opacity:.8;margin-top:3px;}
+.caixa-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
+.caixa-bloco{background:#fff;border-radius:var(--r);padding:18px;box-shadow:var(--sombra);}
+.caixa-bloco h3{font-size:.8rem;font-weight:800;margin-bottom:14px;padding-bottom:9px;border-bottom:1.5px solid var(--lilas);}
+.caixa-linha{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--cinza-c);font-size:.8rem;}
+.caixa-linha:last-child{border-bottom:none;}
+.caixa-linha.bold{font-weight:800;font-size:.9rem;}
+.caixa-linha.verde{color:var(--verde-e);}
+.caixa-linha.vermelho{color:var(--vermelho);}
+.caixa-linha.roxo{color:var(--roxo);font-weight:700;}
+.sangria-item{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--creme);border-radius:8px;margin-bottom:6px;font-size:.78rem;}
+.sangria-desc{font-weight:600;}
+.sangria-val{font-weight:800;color:var(--vermelho);}
+.btn-sangria-del{background:none;border:none;color:var(--cinza);cursor:pointer;font-size:.8rem;opacity:.5;}
+.btn-sangria-del:hover{opacity:1;color:var(--vermelho);}
+.btn-abrir{background:linear-gradient(135deg,var(--verde-e),var(--verde));color:#fff;border:none;padding:13px 28px;border-radius:10px;font-size:1rem;font-weight:800;cursor:pointer;transition:all .2s;}
+.btn-abrir:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(46,204,113,.35);}
+.btn-fechar-cx{background:linear-gradient(135deg,var(--vermelho),#C0392B);color:#fff;border:none;padding:13px 28px;border-radius:10px;font-size:1rem;font-weight:800;cursor:pointer;transition:all .2s;}
+.btn-fechar-cx:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(231,76,60,.35);}
+.diff-pos{color:var(--verde-e);font-weight:800;}
+.diff-neg{color:var(--vermelho);font-weight:800;}
+.historico-caixa{background:#fff;border-radius:var(--r);padding:18px;box-shadow:var(--sombra);}
+.cx-hist-item{padding:12px 14px;border-bottom:1px solid var(--cinza-c);display:flex;gap:12px;align-items:center;}
+.cx-hist-item:last-child{border-bottom:none;}
+.cx-hist-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.cx-hist-dot.ab{background:var(--verde);}
+.cx-hist-dot.fe{background:var(--vermelho);}
+@media(max-width:768px){.caixa-grid{grid-template-columns:1fr;}}
   .pdv-grid,.fin-layout,.fechamento-grid,.fin-resumo{grid-template-columns:1fr;}
   .pedido-card{position:static;}
   .page{padding:12px;}
@@ -259,6 +291,7 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 
 <div class="tabs">
   <div class="tab active" onclick="irTab('venda',this)">🛒 Venda</div>
+  <div class="tab" onclick="irTab('caixa',this)">🏦 Caixa</div>
   <div class="tab" onclick="irTab('historico',this)">📋 Pedidos</div>
   <div class="tab" onclick="irTab('financeiro',this)">💰 Financeiro</div>
   <div class="tab" onclick="irTab('fechamento',this)">📅 Fechamento</div>
@@ -268,6 +301,13 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 
 <!-- ====== VENDA ====== -->
 <div id="tab-venda" class="page active">
+<div id="avisoCaixaFechado" style="display:none;background:linear-gradient(135deg,#C0392B,var(--vermelho));color:#fff;border-radius:var(--r);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+  <div>
+    <div style="font-size:.85rem;font-weight:800;">⚠️ Caixa fechado</div>
+    <div style="font-size:.72rem;opacity:.85;margin-top:2px;">Abra o caixa antes de realizar vendas</div>
+  </div>
+  <button onclick="irTab('caixa',document.querySelectorAll('.tab')[1])" style="background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);color:#fff;padding:7px 16px;border-radius:8px;font-weight:700;font-size:.78rem;cursor:pointer;">🔓 Abrir Caixa</button>
+</div>
 <div class="pdv-grid">
   <div>
     <div class="card" style="margin-bottom:14px;">
@@ -359,6 +399,11 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
     </div>
   </div>
 </div>
+</div>
+
+<!-- ====== CAIXA ====== -->
+<div id="tab-caixa" class="page">
+  <div id="caixaConteudo"></div>
 </div>
 
 <!-- ====== HISTÓRICO ====== -->
@@ -539,6 +584,7 @@ const db  = getDatabase(app);
 // ── ESTADO LOCAL ─────────────────────────────────────────────
 let vendas       = {};   // objeto keyed por firebaseKey
 let lancamentos  = {};
+let caixas       = {};   // histórico de caixas abertos/fechados
 let cfg = {
   nome:'Naçaí', taxa:3.00, wpp:'85900000000', numPed:1,
   produtos:[
@@ -612,6 +658,18 @@ function iniciarListeners(){
     atualizarSaldoHeader();
     setSyncDot('ok');
   });
+
+  // CAIXAS
+  onValue(ref(db,'caixas'), snap=>{
+    caixas={};
+    if(snap.exists()) caixas=snap.val();
+    const tabAtiva=document.querySelector('.tab.active');
+    if(tabAtiva && tabAtiva.textContent.includes('Caixa')) renderCaixa();
+    atualizarSaldoHeader();
+    // aviso na tela de venda
+    const aviso=document.getElementById('avisoCaixaFechado');
+    if(aviso) aviso.style.display=getCaixaAberto()?'none':'flex';
+  });
 }
 
 // ── SALVAR CONFIG ─────────────────────────────────────────────
@@ -638,6 +696,7 @@ window.irTab=function(nome,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+nome).classList.add('active');
   if(el) el.classList.add('active');
+  if(nome==='caixa') renderCaixa();
   if(nome==='historico') renderHist('todos');
   if(nome==='financeiro'){ filtFin('todos',document.querySelector('#tab-financeiro .f-btn')); renderFinResumo(); }
   if(nome==='fechamento') renderFechamento();
@@ -768,6 +827,12 @@ function atualizarPagResumo(){
 // ── FINALIZAR VENDA ──────────────────────────────────────────
 window.finalizarVenda=async function(){
   if(!st.itens.length){ toast('Adicione itens','vermelho'); return; }
+  // ── VERIFICAR CAIXA ABERTO ──
+  if(!getCaixaAberto()){ 
+    toast('⚠️ Abra o caixa antes de realizar vendas!','vermelho'); 
+    irTab('caixa', document.querySelectorAll('.tab')[1]);
+    return; 
+  }
   const nome=document.getElementById('fNome').value.trim();
   if((st.tipo==='delivery'||st.tipo==='retirada')&&!nome){ toast('Informe o nome do cliente','vermelho'); return; }
   const formasPag=Object.keys(st.pagamentos);
@@ -1152,7 +1217,238 @@ window.zerarLancamentos=async function(){
   toast('Lançamentos apagados','vermelho');
 };
 
-// ── INIT ──────────────────────────────────────────────────────
+// ── CAIXA ─────────────────────────────────────────────────────
+function getCaixaAberto(){
+  return Object.entries(caixas).map(([k,c])=>({...c,_key:k})).find(c=>c.status==='aberto')||null;
+}
+
+function getVendasCaixa(caixa){
+  if(!caixa)return[];
+  const ini=new Date(caixa.abertura);
+  const fim=caixa.fechamento?new Date(caixa.fechamento):new Date();
+  return Object.values(vendas).filter(v=>{ const d=new Date(v.data); return d>=ini&&d<=fim; });
+}
+
+function renderCaixa(){
+  const cx=getCaixaAberto();
+  const el=document.getElementById('caixaConteudo');
+  if(!el)return;
+  if(!cx){ renderCaixaFechado(el); } else { renderCaixaAberto(el,cx); }
+}
+
+function renderCaixaFechado(el){
+  // histórico últimos caixas
+  const hist=Object.entries(caixas).map(([k,c])=>({...c,_key:k})).sort((a,b)=>new Date(b.abertura)-new Date(a.abertura)).slice(0,10);
+  el.innerHTML=`
+    <div style="text-align:center;padding:30px 20px;">
+      <div style="font-size:3rem;margin-bottom:12px;">🏦</div>
+      <div style="font-size:1.1rem;font-weight:800;color:var(--acai);margin-bottom:6px;">Caixa Fechado</div>
+      <div style="font-size:.82rem;color:var(--cinza);margin-bottom:24px;">Informe o valor inicial (troco) para abrir o caixa</div>
+      <div style="max-width:320px;margin:0 auto;">
+        <div class="f-row" style="margin-bottom:14px;text-align:left;">
+          <label>Valor de abertura (troco do dia) R$</label>
+          <input type="number" class="fi" id="valorAbertura" placeholder="0,00" step="0.01" style="font-size:1.1rem;font-weight:700;padding:10px 14px;">
+        </div>
+        <div class="f-row" style="text-align:left;margin-bottom:18px;">
+          <label>Observação (opcional)</label>
+          <input type="text" class="fi" id="obsAbertura" placeholder="Ex.: Troco separado...">
+        </div>
+        <button class="btn-abrir" onclick="abrirCaixa()">🔓 Abrir Caixa</button>
+      </div>
+    </div>
+    ${hist.length>0?`
+    <div class="historico-caixa" style="margin-top:20px;">
+      <div class="sec-title">📋 Últimos Caixas</div>
+      ${hist.map(c=>{
+        const ab=new Date(c.abertura);
+        const fe=c.fechamento?new Date(c.fechamento):null;
+        return `<div class="cx-hist-item">
+          <div class="cx-hist-dot ${c.status==='aberto'?'ab':'fe'}"></div>
+          <div style="flex:1;">
+            <div style="font-size:.82rem;font-weight:700;">${ab.toLocaleDateString('pt-BR')} — ${ab.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+            <div style="font-size:.7rem;color:var(--cinza);">Abertura: R$ ${fmt(c.valorAbertura)} · ${fe?'Fechado: '+fe.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'Em aberto'}</div>
+            ${c.resumo?`<div style="font-size:.7rem;color:var(--verde-e);">Total vendas: R$ ${fmt(c.resumo.totalVendas)} · Resultado: R$ ${fmt(c.resumo.resultado)}</div>`:''}
+          </div>
+          <div style="text-align:right;">
+            ${c.resumo?`<div style="font-weight:800;font-size:.88rem;color:${c.resumo.diferenca>=0?'var(--verde-e)':'var(--vermelho)'};">${c.resumo.diferenca>=0?'+':''}R$ ${fmt(c.resumo.diferenca)}</div>`:''}
+            <div style="font-size:.65rem;padding:2px 7px;border-radius:10px;font-weight:700;background:${c.status==='aberto'?'#E8F8F0':'#FFE8E6'};color:${c.status==='aberto'?'var(--verde-e)':'var(--vermelho)'};">${c.status==='aberto'?'Aberto':'Fechado'}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`:''}`;
+}
+
+function renderCaixaAberto(el,cx){
+  const vs=getVendasCaixa(cx);
+  const totalVendas=vs.reduce((a,v)=>a+v.total,0);
+  const totalDinheiro=vs.filter(v=>v.pag&&v.pag.toLowerCase().includes('dinheiro')).reduce((a,v)=>{
+    if(v.pagamentos&&v.pagamentos.dinheiro) return a+v.pagamentos.dinheiro;
+    return a+v.total;
+  },0);
+  const totalPix=vs.reduce((a,v)=>v.pagamentos&&v.pagamentos.pix?a+v.pagamentos.pix:a,0);
+  const totalCredito=vs.reduce((a,v)=>v.pagamentos&&v.pagamentos.credito?a+v.pagamentos.credito:a,0);
+  const totalDebito=vs.reduce((a,v)=>v.pagamentos&&v.pagamentos.debito?a+v.pagamentos.debito:a,0);
+  const sangriasLista=(cx.sangrias?Object.entries(cx.sangrias).map(([k,s])=>({...s,_key:k})):[]);
+  const totalSangrias=sangriasLista.reduce((a,s)=>a+s.valor,0);
+  const dinheiroEmCaixa=cx.valorAbertura+totalDinheiro-totalSangrias;
+  const ab=new Date(cx.abertura);
+
+  el.innerHTML=`
+    <div class="caixa-status aberto">
+      <div>
+        <div class="caixa-status-lbl">🔓 Caixa Aberto</div>
+        <div class="caixa-status-val">R$ ${fmt(dinheiroEmCaixa)}</div>
+        <div class="caixa-status-sub">em dinheiro no caixa agora · Aberto às ${ab.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:.72rem;opacity:.85;margin-bottom:4px;">Total vendido hoje</div>
+        <div style="font-size:1.4rem;font-weight:800;">R$ ${fmt(totalVendas)}</div>
+        <div style="font-size:.7rem;opacity:.75;">${vs.length} pedido(s)</div>
+      </div>
+    </div>
+
+    <div class="caixa-grid">
+      <!-- RESUMO POR FORMA -->
+      <div class="caixa-bloco">
+        <h3>💳 Por Forma de Pagamento</h3>
+        <div class="caixa-linha"><span>💵 Dinheiro</span><span class="diff-pos">R$ ${fmt(totalDinheiro)}</span></div>
+        <div class="caixa-linha"><span>📱 PIX</span><span class="diff-pos">R$ ${fmt(totalPix)}</span></div>
+        <div class="caixa-linha"><span>💳 Crédito</span><span class="diff-pos">R$ ${fmt(totalCredito)}</span></div>
+        <div class="caixa-linha"><span>💳 Débito</span><span class="diff-pos">R$ ${fmt(totalDebito)}</span></div>
+        <div class="caixa-linha bold verde"><span>Total Vendas</span><span>R$ ${fmt(totalVendas)}</span></div>
+      </div>
+
+      <!-- DINHEIRO EM CAIXA -->
+      <div class="caixa-bloco">
+        <h3>💵 Dinheiro em Caixa</h3>
+        <div class="caixa-linha"><span>Abertura (troco)</span><span>R$ ${fmt(cx.valorAbertura)}</span></div>
+        <div class="caixa-linha verde"><span>+ Entradas dinheiro</span><span>R$ ${fmt(totalDinheiro)}</span></div>
+        <div class="caixa-linha vermelho"><span>- Sangrias</span><span>R$ ${fmt(totalSangrias)}</span></div>
+        <div class="caixa-linha bold roxo"><span>= Em caixa agora</span><span>R$ ${fmt(dinheiroEmCaixa)}</span></div>
+      </div>
+    </div>
+
+    <!-- SANGRIAS -->
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="sec-title" style="margin-bottom:0;">💸 Sangrias (retiradas)</div>
+        <button onclick="document.getElementById('formSangria').classList.toggle('show')" style="font-size:.75rem;font-weight:700;color:var(--roxo);background:none;border:1.5px solid var(--lilas);padding:5px 12px;border-radius:8px;cursor:pointer;">+ Nova sangria</button>
+      </div>
+      <div class="del-form" id="formSangria">
+        <div class="form-2col">
+          <div class="f-row"><label>Valor (R$)</label><input type="number" class="fi" id="sangriaVal" placeholder="0,00" step="0.01"></div>
+          <div class="f-row"><label>Motivo</label><input type="text" class="fi" id="sangriaDesc" placeholder="Ex.: Pagamento fornecedor..."></div>
+        </div>
+        <button class="btn-lan" style="background:var(--vermelho);" onclick="registrarSangria('${cx._key}')">💸 Registrar Sangria</button>
+      </div>
+      ${sangriasLista.length>0?sangriasLista.map(s=>`
+        <div class="sangria-item">
+          <div>
+            <div class="sangria-desc">${s.desc||'Sangria'}</div>
+            <div style="font-size:.68rem;color:var(--cinza);">${new Date(s.data).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="sangria-val">- R$ ${fmt(s.valor)}</span>
+            <button class="btn-sangria-del" onclick="deletarSangria('${cx._key}','${s._key}')">🗑</button>
+          </div>
+        </div>`).join(''):'<div style="text-align:center;color:var(--cinza);font-size:.78rem;padding:10px;">Nenhuma sangria registrada</div>'}
+    </div>
+
+    <!-- FECHAR CAIXA -->
+    <div class="card">
+      <h3 style="font-size:.87rem;font-weight:800;margin-bottom:14px;padding-bottom:9px;border-bottom:1.5px solid var(--lilas);">🔒 Fechar Caixa</h3>
+      <div class="form-2col" style="margin-bottom:12px;">
+        <div class="f-row">
+          <label>Valor contado em dinheiro (R$)</label>
+          <input type="number" class="fi" id="valorContado" placeholder="0,00" step="0.01" oninput="calcDiferenca(${dinheiroEmCaixa})">
+        </div>
+        <div class="f-row">
+          <label>Diferença</label>
+          <div id="diferencaBox" style="padding:8px 12px;border-radius:8px;background:var(--cinza-c);font-size:.88rem;font-weight:800;color:var(--cinza);">—</div>
+        </div>
+      </div>
+      <div class="f-row" style="margin-bottom:14px;">
+        <label>Observação do fechamento</label>
+        <input type="text" class="fi" id="obsFechamento" placeholder="Opcional...">
+      </div>
+      <button class="btn-fechar-cx" onclick="fecharCaixa('${cx._key}',${dinheiroEmCaixa},${totalVendas},${totalDinheiro},${totalPix},${totalCredito},${totalDebito},${totalSangrias})">🔒 Fechar Caixa do Dia</button>
+    </div>`;
+}
+
+window.calcDiferenca=function(esperado){
+  const contado=parseFloat(document.getElementById('valorContado').value)||0;
+  const diff=contado-esperado;
+  const box=document.getElementById('diferencaBox');
+  if(contado===0){ box.style.background='var(--cinza-c)'; box.style.color='var(--cinza)'; box.textContent='—'; return; }
+  box.style.background=diff>=0?'#E8F8F0':'#FFE8E6';
+  box.style.color=diff>=0?'var(--verde-e)':'var(--vermelho)';
+  box.textContent=(diff>=0?'+':'')+'R$ '+fmt(diff);
+};
+
+window.abrirCaixa=async function(){
+  const val=parseFloat(document.getElementById('valorAbertura').value)||0;
+  const obs=document.getElementById('obsAbertura').value.trim();
+  if(val<0){ toast('Valor inválido','vermelho'); return; }
+  setSyncDot('sync');
+  await push(ref(db,'caixas'),{
+    status:'aberto',
+    abertura:new Date().toISOString(),
+    valorAbertura:val,
+    obs, sangrias:{}
+  });
+  setSyncDot('ok');
+  toast('Caixa aberto! 🔓','verde');
+};
+
+window.fecharCaixa=async function(key,esperado,totalVendas,totalDin,totalPix,totalCred,totalDeb,totalSangrias){
+  const contado=parseFloat(document.getElementById('valorContado').value)||0;
+  const obs=document.getElementById('obsFechamento').value.trim();
+  const diferenca=contado-esperado;
+  setSyncDot('sync');
+  await update(ref(db,'caixas/'+key),{
+    status:'fechado',
+    fechamento:new Date().toISOString(),
+    valorContado:contado,
+    obsFechamento:obs,
+    resumo:{ totalVendas, totalDinheiro:totalDin, totalPix, totalCredito:totalCred, totalDebito:totalDeb, totalSangrias, esperado, contado, diferenca, resultado:totalVendas-totalSangrias }
+  });
+  setSyncDot('ok');
+  toast('Caixa fechado! 🔒','verde');
+  // exportar resumo automático
+  setTimeout(()=>exportarFechamentoCaixa(key),500);
+};
+
+window.registrarSangria=async function(cxKey){
+  const val=parseFloat(document.getElementById('sangriaVal').value)||0;
+  const desc=document.getElementById('sangriaDesc').value.trim();
+  if(val<=0){ toast('Informe o valor','vermelho'); return; }
+  setSyncDot('sync');
+  await push(ref(db,'caixas/'+cxKey+'/sangrias'),{valor:val,desc:desc||'Sangria',data:new Date().toISOString()});
+  setSyncDot('ok');
+  document.getElementById('sangriaVal').value='';
+  document.getElementById('sangriaDesc').value='';
+  document.getElementById('formSangria').classList.remove('show');
+  toast('Sangria registrada ✓','verde');
+};
+
+window.deletarSangria=async function(cxKey,sKey){
+  if(!confirm('Remover esta sangria?'))return;
+  setSyncDot('sync');
+  await remove(ref(db,'caixas/'+cxKey+'/sangrias/'+sKey));
+  setSyncDot('ok');
+};
+
+function exportarFechamentoCaixa(key){
+  const cx=caixas[key]; if(!cx||!cx.resumo)return;
+  const r=cx.resumo;
+  const ab=new Date(cx.abertura);
+  const fe=cx.fechamento?new Date(cx.fechamento):new Date();
+  let txt=`================================\n   FECHAMENTO DE CAIXA\n   ${cfg.nome.toUpperCase()}\n================================\nData: ${ab.toLocaleDateString('pt-BR')}\nAbertura: ${ab.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}\nFechamento: ${fe.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}\n--------------------------------\nVALOR DE ABERTURA: R$ ${fmt(cx.valorAbertura)}\n--------------------------------\nVENDAS POR FORMA:\n  💵 Dinheiro: R$ ${fmt(r.totalDinheiro)}\n  📱 PIX:      R$ ${fmt(r.totalPix)}\n  💳 Crédito:  R$ ${fmt(r.totalCredito)}\n  💳 Débito:   R$ ${fmt(r.totalDebito)}\nTOTAL VENDAS: R$ ${fmt(r.totalVendas)}\n--------------------------------\nSANGRIAS: R$ ${fmt(r.totalSangrias)}\n--------------------------------\nDINHEIRO ESPERADO: R$ ${fmt(r.esperado)}\nDINHEIRO CONTADO:  R$ ${fmt(r.contado)}\nDIFERENÇA:         R$ ${fmt(r.diferenca)}\n================================\n   Gerado por Naçaí PDV\n================================`;
+  const a=document.createElement('a');
+  a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(txt);
+  a.download=`caixa_${ab.toLocaleDateString('pt-BR').replace(/\//g,'-')}.txt`;
+  a.click();
+}
 iniciarListeners();
 renderProd();
 renderItens();
