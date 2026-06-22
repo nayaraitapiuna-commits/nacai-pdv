@@ -211,7 +211,7 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 .stat-val{font-size:1.5rem;font-weight:800;color:var(--acai);}
 .stat.verde .stat-val{color:var(--verde-e);}
 .stat.vermelho .stat-val{color:var(--vermelho);}
-/* CONFIG */
+/* CONFIG GERAL */
 .cfg-section{background:#fff;border-radius:var(--r);padding:18px;margin-bottom:14px;box-shadow:var(--sombra);}
 .cfg-section h3{font-size:.87rem;font-weight:800;margin-bottom:13px;padding-bottom:9px;border-bottom:1.5px solid var(--lilas);}
 .cfg-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--cinza-c);}
@@ -220,11 +220,28 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 .cfg-sub{font-size:.68rem;color:var(--cinza);margin-top:2px;}
 .cfg-row input{padding:5px 9px;border:1.5px solid var(--lilas);border-radius:7px;font-size:.82rem;width:140px;text-align:right;outline:none;}
 .cfg-row input:focus{border-color:var(--roxo);}
-.prod-cfg-item{display:grid;grid-template-columns:1fr auto auto auto;gap:7px;align-items:center;padding:7px 0;border-bottom:1px solid var(--cinza-c);}
-.prod-cfg-item input{padding:5px 8px;border:1.5px solid var(--lilas);border-radius:6px;font-size:.77rem;outline:none;width:85px;}
-.prod-cfg-item input.nm{width:140px;}
 .btn-add-p{padding:8px 16px;border-radius:8px;border:none;background:var(--lilas);color:var(--roxo-e);font-weight:700;font-size:.78rem;cursor:pointer;margin-top:8px;}
 .btn-save{padding:9px 20px;border-radius:8px;border:none;background:var(--roxo);color:#fff;font-weight:700;font-size:.8rem;cursor:pointer;margin-top:8px;}
+/* CONFIG CATEGORIAS EXPANSÍVEIS */
+.cfg-cat-bloco{background:var(--creme);border:1.5px solid var(--lilas);border-radius:10px;margin-bottom:12px;overflow:hidden;}
+.cfg-cat-header{display:flex;align-items:center;gap:8px;padding:12px 14px;background:#fff;border-bottom:1.5px solid var(--lilas);}
+.cfg-cat-emoji{width:36px;text-align:center;padding:4px 2px;border:1.5px solid var(--lilas);border-radius:6px;font-size:.95rem;outline:none;}
+.cfg-cat-nome{flex:1;padding:6px 10px;border:1.5px solid var(--lilas);border-radius:7px;font-size:.83rem;font-weight:700;outline:none;}
+.cfg-cat-nome:focus{border-color:var(--roxo);}
+.cfg-cat-fid-label{display:flex;align-items:center;gap:4px;font-size:.7rem;cursor:pointer;white-space:nowrap;color:var(--cinza);font-weight:600;}
+.btn-toggle-cat{background:none;border:1.5px solid var(--lilas);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:.8rem;color:var(--roxo);font-weight:700;}
+.cfg-cat-prods{padding:12px 14px;}
+.cfg-prod-item{display:grid;grid-template-columns:34px 1fr auto auto auto;gap:7px;align-items:center;padding:7px 0;border-bottom:1px solid var(--cinza-c);}
+.cfg-prod-item:last-of-type{border-bottom:none;}
+.cfg-prod-emoji{width:30px;text-align:center;padding:4px 2px;border:1.5px solid var(--lilas);border-radius:6px;font-size:.9rem;outline:none;}
+.cfg-prod-nome{padding:6px 8px;border:1.5px solid var(--lilas);border-radius:7px;font-size:.8rem;outline:none;width:100%;}
+.cfg-prod-nome:focus{border-color:var(--roxo);}
+.cfg-prod-preco{width:70px;padding:6px 7px;border:1.5px solid var(--lilas);border-radius:7px;font-size:.8rem;outline:none;text-align:right;}
+.cfg-prod-preco:focus{border-color:var(--roxo);}
+.cfg-prod-tipo{padding:5px 6px;border:1.5px solid var(--lilas);border-radius:7px;font-size:.75rem;outline:none;background:#fff;cursor:pointer;}
+.btn-novo-prod-cat{width:100%;margin-top:10px;padding:9px;border:1.5px dashed var(--roxo);border-radius:8px;background:none;color:var(--roxo);font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.btn-novo-prod-cat:hover{background:var(--lilas);}
+@media(max-width:600px){.cfg-prod-item{grid-template-columns:30px 1fr auto auto;}.cfg-prod-tipo{display:none;}}
 /* MODAL */
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;padding:20px;}
 .modal-ov.show{display:flex;}
@@ -963,19 +980,10 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
     <button class="btn-save" onclick="salvarCfg()">💾 Salvar configurações</button>
   </div>
   <div class="cfg-section">
-    <h3>🏷️ Categorias de Produtos</h3>
-    <div style="font-size:.72rem;color:var(--cinza);margin-bottom:10px;">⭐ = categoria participa do programa de fidelidade</div>
+    <h3>🏷️ Categorias e Produtos</h3>
+    <div style="font-size:.72rem;color:var(--cinza);margin-bottom:14px;">Cada categoria pode ter vários produtos. Clique em ▾ para expandir e adicionar produtos.</div>
     <div id="catCfgLista"></div>
-    <button class="btn-add-p" onclick="addCatCfg()">+ Nova categoria</button>
-  </div>
-  <div class="cfg-section">
-    <h3>🛍️ Produtos</h3>
-    <div style="font-size:.72rem;color:var(--cinza);margin-bottom:10px;">Tipo <strong>kg</strong> = venda por peso · Tipo <strong>fixo</strong> = preço único (adicional, bebida, etc.)</div>
-    <div id="prodCfgLista"></div>
-    <div style="display:flex;gap:8px;margin-top:8px;">
-      <button class="btn-add-p" onclick="addProdCfg()">+ Produto por Kg</button>
-      <button class="btn-add-p" onclick="addAdicCfg()">+ Item fixo</button>
-    </div>
+    <button class="btn-add-p" onclick="addCatCfg()" style="margin-top:4px;">+ Nova categoria</button>
   </div>
   <div class="cfg-section" style="border:1.5px solid #FFD5D5;">
     <h3 style="color:var(--vermelho);">🗑️ Zerar dados</h3>
@@ -1213,29 +1221,44 @@ function getPesoKg(){ return (parseInt(st.dig||'0',10)||0)/1000; }
 // ── PRODUTOS COM CATEGORIAS ──────────────────────────────────
 let catAtiva = 'todas';
 
+// Sempre retorna arrays, convertendo objeto Firebase se necessário
 function getCategorias(){
   const c=cfg.categorias;
-  if(!c) return [{id:'gelados',nome:'Gelados',emoji:'🍦',fidelidade:true},{id:'bomboniere',nome:'Bomboniere',emoji:'🍫',fidelidade:false},{id:'bebidas',nome:'Bebidas',emoji:'🥤',fidelidade:false},{id:'campanhas',nome:'Campanhas',emoji:'📣',fidelidade:false}];
-  // Firebase pode retornar objeto em vez de array
-  if(Array.isArray(c)) return c.filter(Boolean);
-  return Object.values(c).filter(Boolean);
+  const def=[
+    {id:'gelados',nome:'Gelados',emoji:'🍦',fidelidade:true},
+    {id:'bomboniere',nome:'Bomboniere',emoji:'🍫',fidelidade:false},
+    {id:'bebidas',nome:'Bebidas',emoji:'🥤',fidelidade:false},
+    {id:'campanhas',nome:'Campanhas',emoji:'📣',fidelidade:false}
+  ];
+  if(!c) return def;
+  const arr=Array.isArray(c)?c:Object.values(c);
+  return arr.filter(Boolean).length?arr.filter(Boolean):def;
 }
 function getProdutos(){
   const p=cfg.produtos;
-  if(!p) return [];
-  if(Array.isArray(p)) return p.filter(Boolean);
-  return Object.values(p).filter(Boolean);
+  const def=[
+    {id:1,nome:'Açaí Tradicional',emoji:'🍇',preco:28,cat:'gelados',tipo:'kg'},
+    {id:2,nome:'Açaí Premium',emoji:'💜',preco:35,cat:'gelados',tipo:'kg'},
+    {id:3,nome:'Açaí c/ Frutas',emoji:'🍓',preco:32,cat:'gelados',tipo:'kg'},
+    {id:4,nome:'Gelato',emoji:'🍦',preco:34,cat:'gelados',tipo:'kg'},
+    {id:5,nome:'Copo 300ml',emoji:'🥤',preco:2,cat:'bebidas',tipo:'fixo'},
+    {id:6,nome:'Copo 500ml',emoji:'🥤',preco:3,cat:'bebidas',tipo:'fixo'},
+    {id:7,nome:'Granola extra',emoji:'🌾',preco:2,cat:'gelados',tipo:'fixo'},
+    {id:8,nome:'Leite em pó',emoji:'🥛',preco:1.5,cat:'gelados',tipo:'fixo'},
+    {id:9,nome:'Calda morango',emoji:'🍓',preco:2,cat:'gelados',tipo:'fixo'},
+  ];
+  if(!p) return def;
+  const arr=Array.isArray(p)?p:Object.values(p);
+  return arr.filter(Boolean).length?arr.filter(Boolean):def;
 }
 
 function renderCatTabs(){
   const el=document.getElementById('catTabs'); if(!el)return;
   const cats=getCategorias();
-  const temTodas=getProdutos().length>3;
-  let html='';
-  if(temTodas) html+=`<button class="cat-tab ${catAtiva==='todas'?'active':''}" onclick="setCatAtiva('todas')">Todos</button>`;
+  const prods=getProdutos();
+  let html=`<button class="cat-tab ${catAtiva==='todas'?'active':''}" onclick="setCatAtiva('todas')">⚡ Todos</button>`;
   cats.forEach(c=>{
-    const temProd=getProdutos().some(p=>p.cat===c.id);
-    if(!temProd)return;
+    if(!prods.some(p=>p.cat===c.id))return;
     html+=`<button class="cat-tab ${catAtiva===c.id?'active':''}" onclick="setCatAtiva('${c.id}')">${c.emoji} ${c.nome}${c.fidelidade?'<span class="fid-dot"></span>':''}</button>`;
   });
   el.innerHTML=html;
@@ -1248,38 +1271,34 @@ function renderProd(){
   const g=document.getElementById('prodGrid'); if(!g)return;
   const cats=getCategorias();
   const prods=getProdutos();
-
-  // fallback visual se não houver produtos
-  if(!prods.length){
-    g.innerHTML='<div style="text-align:center;padding:20px;color:var(--cinza);font-size:.8rem;">Carregando produtos...<br><span style="font-size:.7rem;opacity:.6;">Conectando ao banco de dados</span></div>';
-    return;
-  }
-
   const filtrado=catAtiva==='todas'?cats:cats.filter(c=>c.id===catAtiva);
 
-  // atualizar label produto selecionado no display de peso
+  // label produto selecionado
   const lbl=document.getElementById('prodSelLabel');
   if(lbl) lbl.textContent=st.prodSel?st.prodSel.emoji+' '+st.prodSel.nome:'';
 
-  // montar HTML das categorias
   let html='';
+  let totalMostrado=0;
   filtrado.forEach(cat=>{
     const itensCat=prods.filter(p=>p.cat===cat.id);
     if(!itensCat.length)return;
+    totalMostrado+=itensCat.length;
     html+=`<div class="prod-cat-section">
-      <div class="prod-cat-titulo">${cat.emoji} ${cat.nome} ${cat.fidelidade?'<span class="prod-cat-fid">⭐ Fidelidade</span>':''}</div>
+      <div class="prod-cat-titulo">${cat.emoji} ${cat.nome}${cat.fidelidade?' <span class="prod-cat-fid">⭐ Fidelidade</span>':''}</div>
       <div class="prod-grid-cat">
         ${itensCat.map(p=>`
-          <button class="prod-btn-cat ${p.tipo==='fixo'?'tipo-fixo':''} ${st.prodSel?.id===p.id?'sel':''}" onclick="selProd(${p.id})">
+          <button class="prod-btn-cat ${p.tipo==='fixo'?'tipo-fixo':''} ${st.prodSel&&st.prodSel.id==p.id?'sel':''}" onclick="selProd(${p.id})">
             <span class="prod-emoji">${p.emoji}</span>
             <div class="prod-nome">${p.nome}</div>
-            <div class="prod-preco">${p.tipo==='kg'?'R$ '+fmt(p.preco)+'/kg':'R$ '+fmt(p.preco)}</div>
-            ${p.tipo==='fixo'?'<div style="font-size:.58rem;color:var(--cinza);margin-top:2px;">fixo</div>':''}
+            <div class="prod-preco">${p.tipo==='kg'?'R$'+fmt(p.preco)+'/kg':'R$'+fmt(p.preco)}</div>
           </button>`).join('')}
       </div>
     </div>`;
   });
 
+  if(!totalMostrado){
+    html='<div style="text-align:center;padding:24px;color:var(--cinza);font-size:.82rem;">Nenhum produto nesta categoria.<br><span style="font-size:.72rem;opacity:.6;">Adicione em ⚙️ Config</span></div>';
+  }
   g.innerHTML=html;
 }
 
@@ -1791,41 +1810,83 @@ window.exportarAnual=function(){
 
 // ── CONFIG ────────────────────────────────────────────────────
 function renderCfg(){
-  document.getElementById('cfgNome').value=cfg.nome;
-  document.getElementById('cfgTaxa').value=cfg.taxa;
-  document.getElementById('cfgWpp').value=cfg.wpp;
+  document.getElementById('cfgNome').value=cfg.nome||'Naçaí';
+  document.getElementById('cfgTaxa').value=cfg.taxa||3;
+  document.getElementById('cfgWpp').value=cfg.wpp||'';
   document.getElementById('cfgNumMesas').value=cfg.numMesas||10;
-  // CATEGORIAS
-  const catEl=document.getElementById('catCfgLista');
-  if(catEl) catEl.innerHTML=(cfg.categorias||[]).map(c=>`
-    <div class="prod-cfg-item" style="grid-template-columns:40px 1fr auto auto;">
-      <input style="width:36px;text-align:center;padding:4px;" value="${c.emoji}" onchange="updCatCfg('${c.id}','emoji',this.value)">
-      <input class="nm" value="${c.nome}" onchange="updCatCfg('${c.id}','nome',this.value)">
-      <label style="display:flex;align-items:center;gap:4px;font-size:.7rem;cursor:pointer;white-space:nowrap;padding:0 6px;">
-        <input type="checkbox" ${c.fidelidade?'checked':''} onchange="updCatCfg('${c.id}','fidelidade',this.checked)"> ⭐Fid
-      </label>
-      <button class="btn-del-lan" onclick="delCatCfg('${c.id}')">🗑</button>
-    </div>`).join('');
-  // PRODUTOS
-  const prodEl=document.getElementById('prodCfgLista');
-  if(prodEl){
-    const cats=cfg.categorias||[];
-    prodEl.innerHTML=(cfg.produtos||[]).map(p=>`
-      <div class="prod-cfg-item" style="grid-template-columns:34px 1fr 70px auto auto auto;">
-        <input style="width:30px;text-align:center;padding:3px;" value="${p.emoji}" onchange="updProdCfg(${p.id},'emoji',this.value)">
-        <input class="nm" value="${p.nome}" onchange="updProdCfg(${p.id},'nome',this.value)">
-        <input type="number" value="${p.preco.toFixed(2)}" step="0.5" onchange="updProdCfg(${p.id},'preco',this.value)">
-        <select onchange="updProdCfg(${p.id},'cat',this.value)" style="padding:4px;border:1.5px solid var(--lilas);border-radius:6px;font-size:.7rem;outline:none;">
-          ${cats.map(c=>`<option value="${c.id}" ${p.cat===c.id?'selected':''}>${c.emoji} ${c.nome}</option>`).join('')}
-        </select>
-        <select onchange="updProdCfg(${p.id},'tipo',this.value)" style="padding:4px;border:1.5px solid var(--lilas);border-radius:6px;font-size:.7rem;outline:none;">
-          <option value="kg" ${p.tipo==='kg'?'selected':''}>kg</option>
-          <option value="fixo" ${p.tipo==='fixo'?'selected':''}>fixo</option>
-        </select>
-        <button class="btn-del-lan" onclick="delProdCfg(${p.id})">🗑</button>
-      </div>`).join('');
-  }
+
+  const cats=getCategorias();
+  const prods=getProdutos();
+  const el=document.getElementById('catCfgLista'); if(!el)return;
+
+  el.innerHTML=cats.map(c=>{
+    const prodsCat=prods.filter(p=>p.cat===c.id);
+    return `
+    <div class="cfg-cat-bloco" id="catbloco_${c.id}">
+      <!-- HEADER DA CATEGORIA -->
+      <div class="cfg-cat-header">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;">
+          <input class="cfg-cat-emoji" value="${c.emoji}" onchange="updCatCfg('${c.id}','emoji',this.value)" title="Emoji">
+          <input class="cfg-cat-nome" value="${c.nome}" onchange="updCatCfg('${c.id}','nome',this.value)">
+          <label class="cfg-cat-fid-label" title="Participa da fidelidade">
+            <input type="checkbox" ${c.fidelidade?'checked':''} onchange="updCatCfg('${c.id}','fidelidade',this.checked)">
+            ⭐ Fidelidade
+          </label>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="font-size:.68rem;color:var(--cinza);">${prodsCat.length} produto(s)</span>
+          <button onclick="toggleCatBloco('${c.id}')" class="btn-toggle-cat" id="toggle_${c.id}">▾</button>
+          <button class="btn-del-lan" onclick="delCatCfg('${c.id}')" title="Remover categoria">🗑</button>
+        </div>
+      </div>
+
+      <!-- PRODUTOS DESTA CATEGORIA -->
+      <div class="cfg-cat-prods" id="prods_${c.id}">
+        ${prodsCat.map(p=>`
+        <div class="cfg-prod-item">
+          <input class="cfg-prod-emoji" value="${p.emoji}" onchange="updProdCfg(${p.id},'emoji',this.value)" title="Emoji">
+          <input class="cfg-prod-nome" value="${p.nome}" onchange="updProdCfg(${p.id},'nome',this.value)" placeholder="Nome do produto">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <span style="font-size:.68rem;color:var(--cinza);">R$</span>
+            <input class="cfg-prod-preco" type="number" value="${p.preco.toFixed(2)}" step="0.5" onchange="updProdCfg(${p.id},'preco',this.value)" placeholder="0,00">
+          </div>
+          <select class="cfg-prod-tipo" onchange="updProdCfg(${p.id},'tipo',this.value)">
+            <option value="kg" ${p.tipo==='kg'?'selected':''}>⚖️ Por kg</option>
+            <option value="fixo" ${p.tipo==='fixo'?'selected':''}>🏷️ Fixo</option>
+          </select>
+          <button class="btn-del-lan" onclick="delProdCfg(${p.id})" title="Remover produto">🗑</button>
+        </div>`).join('')}
+
+        <!-- BOTÃO NOVO PRODUTO -->
+        <button class="btn-novo-prod-cat" onclick="addProdNaCat('${c.id}')">
+          + Novo produto em ${c.emoji} ${c.nome}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
 }
+
+window.toggleCatBloco=function(id){
+  const el=document.getElementById('prods_'+id);
+  const btn=document.getElementById('toggle_'+id);
+  if(!el)return;
+  const aberto=el.style.display!=='none';
+  el.style.display=aberto?'none':'block';
+  if(btn) btn.textContent=aberto?'▸':'▾';
+};
+
+window.addProdNaCat=function(catId){
+  const prods=getProdutos();
+  const novoId=Date.now();
+  prods.push({id:novoId,nome:'Novo Produto',emoji:'🍦',preco:0,cat:catId,tipo:'kg'});
+  cfg.produtos=prods;
+  salvarCfgFb(); renderCfg(); renderProd();
+  // focar no nome do novo produto
+  setTimeout(()=>{
+    const bloco=document.getElementById('prods_'+catId);
+    if(bloco){ const inputs=bloco.querySelectorAll('.cfg-prod-nome'); if(inputs.length) inputs[inputs.length-1].focus(); }
+  },200);
+};
 window.updCatCfg=function(id,campo,val){
   const c=(cfg.categorias||[]).find(x=>x.id===id); if(!c)return;
   c[campo]=campo==='fidelidade'?val:val;
