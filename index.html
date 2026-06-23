@@ -856,15 +856,6 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
           <input type="text" class="fi" id="addComandaObs" placeholder="Observação (opcional)...">
         </div>
         <button class="btn-add-item-mesa" onclick="addItemComanda()">➕ Adicionar</button>
-
-        <!-- TRANSFERIR DO BALCÃO -->
-        <div id="transferenciaBalcao" style="display:none;margin-top:10px;padding-top:10px;border-top:1.5px dashed var(--lilas);">
-          <div style="font-size:.7rem;font-weight:700;color:var(--cinza);margin-bottom:6px;">🛒 Pedido no balcão em aberto:</div>
-          <div id="transferItensPreview" style="font-size:.75rem;color:var(--acai);margin-bottom:8px;"></div>
-          <button onclick="transferirBalcaoParaMesa()" style="width:100%;background:linear-gradient(135deg,var(--amarelo),#E67E22);color:#fff;border:none;padding:9px;border-radius:8px;font-weight:700;font-size:.78rem;cursor:pointer;">
-            📋 Transferir pedido para esta mesa
-          </button>
-        </div>
       </div>
 
       <!-- COL DIREITA: COMANDA + PAGAMENTO -->
@@ -2661,7 +2652,6 @@ function renderModalMesa(mesa){
 
   renderComandaItens(mesa);
   resetMesaPag(mesa);
-  verificarTransferenciaBalcao();
 }
 
 function renderComandaItens(mesa){
