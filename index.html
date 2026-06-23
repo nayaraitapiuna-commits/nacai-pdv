@@ -812,33 +812,42 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
           <button onclick="editarNomeMesa()" style="background:none;border:none;cursor:pointer;font-size:.8rem;opacity:.4;" title="Editar nome">✏️</button>
         </div>
         <div class="comanda-tempo" id="comandaTempo"></div>
-        <!-- FIDELIDADE NA MESA -->
-        <div id="mesaFidelidadeBox" style="display:none;margin-top:8px;background:var(--creme);border-radius:8px;padding:8px 10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:.7rem;font-weight:700;color:var(--roxo);">⭐ <span id="mesaCliNomeFid"></span></span>
-            <span style="font-size:.75rem;font-weight:800;color:var(--roxo);"><span id="mesaPontosAtuais">0</span> pts</span>
-          </div>
-          <div class="fidelidade-bar-wrap"><div class="fidelidade-bar" id="mesaFidBar" style="width:0%"></div></div>
-          <div style="font-size:.65rem;color:var(--cinza);">Faltam <span id="mesaPontosFaltam">150</span> pts para 10% de desconto · expira em <span id="mesaPontosExp"></span></div>
-        </div>
       </div>
       <button onclick="fecharModalMesa()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--cinza);">✕</button>
     </div>
 
-    <!-- ADICIONAR ITEM -->
+    <!-- BUSCA DE CLIENTE NA MESA -->
+    <div style="margin-bottom:12px;">
+      <div id="mesaCliSelBadge" style="display:none;" class="cliente-sel-badge">
+        <span>👤</span>
+        <span class="cliente-sel-nome" id="mesaCliSelNome"></span>
+        <span id="mesaCliFidTag" style="margin-left:6px;font-size:.65rem;background:var(--lilas);color:var(--roxo);padding:2px 7px;border-radius:10px;font-weight:700;"></span>
+        <button class="btn-rm-cli" onclick="removerClienteMesa()">✕</button>
+      </div>
+      <div class="cliente-busca" id="mesaCliBuscaWrap">
+        <span class="cliente-busca-icon">🔍</span>
+        <input type="text" id="mesaCliBusca" placeholder="Identificar cliente (fidelidade e ranking)..." oninput="buscarClienteMesa()" autocomplete="off">
+        <div class="cliente-dropdown" id="mesaCliDropdown"></div>
+      </div>
+      <!-- INFO FIDELIDADE -->
+      <div id="mesaFidelidadeBox" style="display:none;margin-top:8px;background:var(--creme);border-radius:8px;padding:8px 10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:.7rem;font-weight:700;color:var(--roxo);">⭐ <span id="mesaCliNomeFid"></span></span>
+          <span style="font-size:.75rem;font-weight:800;color:var(--roxo);">R$ <span id="mesaPontosAtuais">0</span> crédito</span>
+        </div>
+        <div class="fidelidade-bar-wrap"><div class="fidelidade-bar" id="mesaFidBar" style="width:0%"></div></div>
+        <div style="font-size:.65rem;color:var(--cinza);">Faltam R$ <span id="mesaPontosFaltam">200</span> em Gelados para R$ 10,00 de desconto · expira em <span id="mesaPontosExp"></span></div>
+      </div>
+    </div>
+
+    <!-- ADICIONAR ITEM (só produtos por kg e fixos — sem seção "adicionais" separada) -->
     <div class="add-comanda-form" id="addComandaForm">
       <div class="add-comanda-titulo">➕ Adicionar item à comanda</div>
       <div class="add-comanda-prod" id="addComandaProd"></div>
-      <!-- peso para produtos kg -->
       <div id="addComandaPesoBox" style="display:none;margin-top:8px;">
         <div class="f-row"><label>Peso (gramas)</label>
           <input type="number" class="fi" id="addComandaPeso" placeholder="Ex.: 500">
         </div>
-      </div>
-      <!-- adicionais fixos -->
-      <div style="margin-top:8px;">
-        <div style="font-size:.65rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Adicionais</div>
-        <div class="add-comanda-prod" id="addComandaAdic"></div>
       </div>
       <div class="f-row" style="margin-top:8px;">
         <label>Observação do item</label>
@@ -2409,7 +2418,63 @@ window.abrirComanda=async function(num){
   document.getElementById('modalMesa').classList.add('show');
 };
 
-// ── NOME EDITÁVEL DA MESA ─────────────────────────────────────
+// ── CLIENTE NA MESA ──────────────────────────────────────────
+window.buscarClienteMesa=function(){
+  const q=document.getElementById('mesaCliBusca').value.trim().toLowerCase();
+  const dd=document.getElementById('mesaCliDropdown');
+  if(q.length<2){ dd.classList.remove('show'); return; }
+  const res=Object.entries(clientes)
+    .map(([k,c])=>({...c,_key:k}))
+    .filter(c=>(c.nome||'').toLowerCase().includes(q)||(c.tel||'').includes(q))
+    .slice(0,6);
+  if(!res.length){ dd.classList.remove('show'); return; }
+  dd.innerHTML=res.map(c=>{
+    const {creditos}=getPontosValidos(c);
+    return `<div class="cliente-opt" onclick="selecionarClienteMesa('${c._key}')">
+      <div class="cliente-opt-nome">👤 ${c.nome}</div>
+      <div class="cliente-opt-det">${c.tel||''}${creditos>0?' · R$ '+fmt(creditos*FID_CREDITO)+' crédito':''}</div>
+    </div>`;
+  }).join('');
+  dd.classList.add('show');
+};
+
+window.selecionarClienteMesa=async function(key){
+  const c=clientes[key]; if(!c||!mesaAtual)return;
+  document.getElementById('mesaCliBusca').value='';
+  document.getElementById('mesaCliDropdown').classList.remove('show');
+  document.getElementById('mesaCliSelNome').textContent=c.nome;
+  const {creditos}=getPontosValidos(c);
+  const fidTag=document.getElementById('mesaCliFidTag');
+  if(fidTag) fidTag.textContent=creditos>0?`R$ ${fmt(creditos*FID_CREDITO)} crédito`:'';
+  document.getElementById('mesaCliSelBadge').style.display='flex';
+  document.getElementById('mesaCliBuscaWrap').style.display='none';
+  // salvar clienteKey na mesa no Firebase
+  await update(ref(db,'mesas/'+mesaAtual),{clienteKey:key});
+  atualizarFidelidadeMesa(key);
+  toast(c.nome+' identificado ✓','verde');
+};
+
+window.removerClienteMesa=async function(){
+  document.getElementById('mesaCliSelBadge').style.display='none';
+  document.getElementById('mesaCliBuscaWrap').style.display='block';
+  document.getElementById('mesaCliBusca').value='';
+  document.getElementById('mesaFidelidadeBox').style.display='none';
+  if(mesaAtual) await update(ref(db,'mesas/'+mesaAtual),{clienteKey:null});
+};
+
+function atualizarFidelidadeMesa(key){
+  const c=clientes[key]; if(!c)return;
+  const {gastoAcum,creditos}=getPontosValidos(c);
+  const fidBox=document.getElementById('mesaFidelidadeBox');
+  fidBox.style.display='block';
+  document.getElementById('mesaCliNomeFid').textContent=c.nome;
+  document.getElementById('mesaPontosAtuais').textContent=fmt(creditos*FID_CREDITO);
+  const falta=Math.max(0,FID_META-gastoAcum);
+  document.getElementById('mesaPontosFaltam').textContent=fmt(falta);
+  document.getElementById('mesaFidBar').style.width=Math.min(100,(gastoAcum/FID_META)*100)+'%';
+  const exp=c.pontosExpira?new Date(c.pontosExpira).toLocaleDateString('pt-BR'):'—';
+  document.getElementById('mesaPontosExp').textContent=exp;
+}
 window.editarNomeMesa=function(){
   const display=document.getElementById('comandaMesaNum');
   const input=document.getElementById('comandaMesaNomeInput');
@@ -2441,34 +2506,50 @@ function renderModalMesa(mesa){
   document.getElementById('comandaMesaNomeInput').style.display='none';
   document.getElementById('comandaTempo').textContent='Aberta há '+tempoAberto(mesa.abertura);
 
-  // Fidelidade na mesa (se cliente vinculado)
-  const fidBox=document.getElementById('mesaFidelidadeBox');
-  if(mesa.clienteKey && clientes[mesa.clienteKey]){
-    const c=clientes[mesa.clienteKey];
-    const pts=getPontosValidos(c);
-    fidBox.style.display='block';
-    document.getElementById('mesaCliNomeFid').textContent=c.nome;
-    document.getElementById('mesaPontosAtuais').textContent=pts;
-    document.getElementById('mesaPontosFaltam').textContent=Math.max(0,150-pts);
-    document.getElementById('mesaFidBar').style.width=Math.min(100,(pts/150)*100)+'%';
-    const exp=c.pontosExpira?new Date(c.pontosExpira).toLocaleDateString('pt-BR'):'—';
-    document.getElementById('mesaPontosExp').textContent=exp;
-  } else { fidBox.style.display='none'; }
+  // reset busca cliente
+  const clienteKey=mesa.clienteKey||null;
+  const selBadge=document.getElementById('mesaCliSelBadge');
+  const buscaWrap=document.getElementById('mesaCliBuscaWrap');
+  if(clienteKey && clientes[clienteKey]){
+    const c=clientes[clienteKey];
+    document.getElementById('mesaCliSelNome').textContent=c.nome;
+    const {creditos}=getPontosValidos(c);
+    const fidTag=document.getElementById('mesaCliFidTag');
+    if(fidTag) fidTag.textContent=creditos>0?`R$ ${fmt(creditos*FID_CREDITO)} crédito`:'';
+    selBadge.style.display='flex';
+    buscaWrap.style.display='none';
+    atualizarFidelidadeMesa(clienteKey);
+  } else {
+    selBadge.style.display='none';
+    buscaWrap.style.display='block';
+    document.getElementById('mesaCliBusca').value='';
+    document.getElementById('mesaFidelidadeBox').style.display='none';
+  }
 
-  // produtos para adicionar
+  // produtos por categoria (sem adicionais separados)
+  const cats=getCategorias();
+  const prods=getProdutos();
   const prodGrid=document.getElementById('addComandaProd');
-  if(prodGrid) prodGrid.innerHTML=(cfg.produtos||[]).map(p=>`
-    <button class="add-cp-btn ${prodSelMesa?.id===p.id?'sel':''}" onclick="selProdMesa(${p.id})">
-      <span class="add-cp-emoji">${p.emoji}</span>${p.nome}<br>
-      <strong style="color:var(--roxo);font-size:.65rem;">R$${fmt(p.preco)}/kg</strong>
-    </button>`).join('');
-
-  const adicGrid=document.getElementById('addComandaAdic');
-  if(adicGrid) adicGrid.innerHTML=(cfg.adicionais||[]).map(a=>`
-    <button class="add-cp-btn" onclick="addAdicComanda(${a.id})">
-      <span class="add-cp-emoji">${a.emoji}</span>${a.nome}<br>
-      <strong style="color:var(--roxo);font-size:.65rem;">R$${fmt(a.preco)}</strong>
-    </button>`).join('');
+  if(prodGrid){
+    let html='';
+    cats.forEach(cat=>{
+      const itensCat=prods.filter(p=>p.cat===cat.id);
+      if(!itensCat.length)return;
+      html+=`<div style="margin-bottom:10px;">
+        <div style="font-size:.65rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">${cat.emoji} ${cat.nome}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${itensCat.map(p=>{
+            const icone=p.img?`<img src="${p.img}" style="width:28px;height:28px;border-radius:5px;object-fit:cover;vertical-align:middle;margin-right:4px;">`:`${p.emoji} `;
+            return `<button class="add-cp-btn" onclick="selProdMesa(${p.id})" style="display:flex;align-items:center;gap:4px;">
+              ${icone}<span>${p.nome}</span>
+              <span style="font-size:.62rem;color:var(--roxo);font-weight:700;">${p.tipo==='kg'?'R$'+fmt(p.preco)+'/kg':'R$'+fmt(p.preco)}</span>
+            </button>`;
+          }).join('')}
+        </div>
+      </div>`;
+    });
+    prodGrid.innerHTML=html;
+  }
 
   renderComandaItens(mesa);
   resetMesaPag(mesa);
@@ -2674,56 +2755,44 @@ window.fecharMesa=async function(){
   if(!snap.exists()){toast('Mesa não encontrada','vermelho');return;}
   const mesa=snap.val();
   const itens=mesa.itens?Object.values(mesa.itens):[];
+  const clienteKey=mesa.clienteKey||null;
+  const clienteNome=clienteKey&&clientes[clienteKey]?clientes[clienteKey].nome:'Mesa '+mesa.numero;
   const nomePag={dinheiro:'Dinheiro',pix:'PIX',credito:'Crédito',debito:'Débito'};
   const pagDesc=formasPag.length===1?nomePag[formasPag[0]]:formasPag.map(f=>nomePag[f]+' R$'+fmt(mesaPagamentos[f])).join(' + ');
   const troco=Math.max(0,totalPago-total);
 
   setSyncDot('sync');
-  // Registrar como venda
   const v={
-    numero:cfg.numPed||1,
-    data:new Date().toISOString(),
+    numero:cfg.numPed||1, data:new Date().toISOString(),
     tipo:'mesa', mesa:mesa.numero,
     pag:pagDesc, pagamentos:{...mesaPagamentos}, troco,
-    cliente:'Mesa '+mesa.numero,
-    tel:'', end:'', obs:'',
-    itens, subtotal:total, taxa:0, total
+    cliente:clienteNome, clienteKey,
+    tel:clienteKey&&clientes[clienteKey]?clientes[clienteKey].tel||'':'',
+    end:'', obs:'', itens, subtotal:total, taxa:0, total
   };
   await push(ref(db,'vendas'),v);
-  // Lançamento financeiro
   await push(ref(db,'lancamentos'),{
-    tipo:'receber', desc:'Mesa '+mesa.numero+' — fechamento',
+    tipo:'receber', desc:'Mesa '+mesa.numero+(clienteKey?' ('+clienteNome+')':''),
     valor:total, data:new Date().toISOString(), venc:new Date().toISOString().split('T')[0],
     cat:'vendas', obs:'', pago:true, auto:true
   });
-  // Incrementar numPed
   cfg.numPed=(cfg.numPed||1)+1;
   await set(ref(db,'config'),cfg);
-  setSyncDot('ok');
 
-  // Processar fidelidade
-  const clienteKeyVenda=st.clienteSel?._key||null;
-  if(clienteKeyVenda){
-    if(st.desconto.fidelidade && st.desconto.creditosUsar){
-      await usarCreditoFidelidade(clienteKeyVenda, st.desconto.creditosUsar);
-      // ainda processa os novos gastos desta compra
-      const r=await processarFidelidade(clienteKeyVenda, v.itens);
-      if(r.creditosGanhos>0) toast(`+${r.creditosGanhos} crédito(s) novo(s) ganho(s)! ⭐`,'verde');
-    } else {
-      const r=await processarFidelidade(clienteKeyVenda, v.itens);
-      if(r.creditosGanhos>0) toast(`🎉 +${r.creditosGanhos} crédito(s)! Agora tem R$ ${fmt(r.creditosTotal*FID_CREDITO)} de desconto`,'verde');
-      else {
-        const c=clientes[clienteKeyVenda];
-        if(c){
-          const {gastoAcum}=getPontosValidos(c);
-          const faltaFid=FID_META-(gastoAcum||0);
-          const totalFid=totalFidelidade(v.itens);
-          if(totalFid>0) toast(`⭐ +R$ ${fmt(totalFid)} acumulado. Faltam R$ ${fmt(Math.max(0,faltaFid-totalFid))} para R$ ${fmt(FID_CREDITO)} de desconto`,'verde');
-        }
+  // Fidelidade — usa clienteKey da mesa
+  if(clienteKey){
+    const r=await processarFidelidade(clienteKey, itens);
+    if(r.creditosGanhos>0) toast(`🎉 ${clienteNome} ganhou R$ ${fmt(r.creditosGanhos*FID_CREDITO)} de crédito! ⭐`,'verde');
+    else {
+      const c=clientes[clienteKey];
+      if(c){
+        const {gastoAcum}=getPontosValidos(c);
+        const totalFid=totalFidelidade(itens);
+        if(totalFid>0) toast(`⭐ ${clienteNome}: +R$ ${fmt(totalFid)} acumulado`,'verde');
       }
     }
   }
-  // Fechar/remover mesa
+
   await remove(ref(db,'mesas/'+mesaAtual));
   setSyncDot('ok');
   fecharModalMesa();
