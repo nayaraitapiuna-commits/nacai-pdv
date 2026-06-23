@@ -1053,7 +1053,8 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
   <div class="cfg-section" style="border:1.5px solid #FFD5D5;">
     <h3 style="color:var(--vermelho);">🗑️ Zerar dados</h3>
     <button onclick="zerarVendas()" style="background:var(--vermelho);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.82rem;margin-bottom:8px;">Apagar histórico de vendas</button><br>
-    <button onclick="zerarLancamentos()" style="background:var(--vermelho);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.82rem;margin-top:8px;">Apagar lançamentos financeiros</button>
+    <button onclick="zerarLancamentos()" style="background:var(--vermelho);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.82rem;margin-top:8px;">Apagar lançamentos financeiros</button><br>
+    <button onclick="zerarMesas()" style="background:var(--amarelo);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.82rem;margin-top:8px;">🪑 Limpar mesas abertas (emergência)</button>
   </div>
 </div>
 
@@ -2060,6 +2061,13 @@ window.salvarCfg=async function(){
   await salvarCfgFb();
   toast('Configurações salvas ✓','verde');
 };
+window.zerarMesas=async function(){
+  if(!confirm('Limpar TODAS as mesas abertas? Use só em emergência.'))return;
+  setSyncDot('sync');
+  await set(ref(db,'mesas'),null);
+  setSyncDot('ok');
+  toast('Mesas limpas ✓','verde');
+};
 window.zerarVendas=async function(){
   if(!confirm('Apagar TODO o histórico de vendas? Isso não pode ser desfeito.'))return;
   setSyncDot('sync');
@@ -2407,8 +2415,13 @@ function renderMesas(){
 }
 
 window.abrirComanda=async function(num){
-  if(!getCaixaAberto()){ toast('⚠️ Abra o caixa antes de usar mesas!','vermelho'); irTab('caixa',document.querySelectorAll('.tab')[2]); return; }
   let mesa=getMesaOcupada(num);
+  // Só bloqueia se for abrir NOVA mesa sem caixa aberto
+  if(!mesa && !getCaixaAberto()){
+    toast('⚠️ Abra o caixa antes de usar mesas!','vermelho');
+    irTab('caixa',document.querySelectorAll('.tab')[2]);
+    return;
+  }
   if(!mesa){
     const novaRef=await push(ref(db,'mesas'),{numero:num,status:'aberta',abertura:new Date().toISOString(),itens:{},nomeCustom:''});
     mesaAtual=novaRef.key;
