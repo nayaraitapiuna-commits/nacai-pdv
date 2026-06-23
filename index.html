@@ -418,7 +418,13 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 /* ADICIONAR ITEM NA COMANDA */
 .add-comanda-form{background:var(--creme);border-radius:10px;padding:14px;margin-bottom:14px;}
 .add-comanda-titulo{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--cinza);margin-bottom:10px;}
-.add-comanda-prod{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:7px;margin-bottom:10px;}
+.add-comanda-prod{display:flex;flex-direction:column;gap:6px;}
+.add-cp-btn{background:#fff;border:1.5px solid var(--lilas);border-radius:8px;padding:7px 10px;cursor:pointer;text-align:left;font-size:.78rem;font-weight:600;color:var(--acai);transition:all .15s;display:flex;align-items:center;gap:8px;width:100%;}
+.add-cp-btn:hover,.add-cp-btn.sel{border-color:var(--roxo);background:var(--lilas);}
+.add-cp-emoji{font-size:1.2rem;flex-shrink:0;}
+.add-cp-info{flex:1;min-width:0;}
+.add-cp-nome{font-weight:700;font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.add-cp-preco{font-size:.68rem;color:var(--roxo);font-weight:700;}
 .add-cp-btn{background:#fff;border:2px solid var(--lilas);border-radius:8px;padding:8px 6px;cursor:pointer;text-align:center;font-size:.7rem;font-weight:600;transition:all .15s;}
 .add-cp-btn:hover,.add-cp-btn.sel{border-color:var(--roxo);background:var(--lilas);color:var(--roxo);}
 .add-cp-emoji{font-size:1.2rem;display:block;margin-bottom:3px;}
@@ -626,6 +632,10 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
       <div class="troco-row" id="trocoRow"><input id="vPagou"><span id="trocoVal"></span></div>
     </div>
     <button class="btn-ok" onclick="finalizarVenda()">✅ Finalizar Venda</button>
+    <!-- TRANSFERIR PARA MESA -->
+    <button id="btnTransferirMesa" onclick="abrirTransferirParaMesa()" style="display:none;width:100%;margin-top:8px;background:linear-gradient(135deg,var(--amarelo),#E67E22);color:#fff;border:none;padding:11px;border-radius:10px;font-size:.85rem;font-weight:800;cursor:pointer;">
+      🪑 Enviar para Mesa
+    </button>
     <button class="btn-clr" onclick="limpar()" style="margin-top:8px;">🗑️ Limpar</button>
   </div>
 
@@ -1408,7 +1418,7 @@ window.rmItem=function(id){ st.itens=st.itens.filter(i=>i.id!==id); renderItens(
 
 function renderItens(){
   const el=document.getElementById('itensList');
-  if(!st.itens.length){ el.innerHTML='<div class="empty-cart">Nenhum item.<br>Selecione um produto acima.</div>'; updTot(); return; }
+  if(!st.itens.length){ el.innerHTML='<div class="empty-cart">Nenhum item.<br>Selecione um produto acima.</div>'; updTot(); atualizarBtnTransferir(); return; }
   el.innerHTML=st.itens.map(i=>`
     <div class="item-row">
       <div class="item-info">
@@ -1419,6 +1429,7 @@ function renderItens(){
       <button class="btn-rm" onclick="rmItem(${i.id})">✕</button>
     </div>`).join('');
   updTot();
+  atualizarBtnTransferir();
 }
 
 // ── TIPO ─────────────────────────────────────────────────────
@@ -2478,44 +2489,95 @@ function atualizarFidelidadeMesa(key){
   document.getElementById('mesaPontosExp').textContent=exp;
 }
 // ── TRANSFERIR BALCÃO → MESA ──────────────────────────────────
-window.transferirBalcaoParaMesa=async function(){
-  if(!mesaAtual){ toast('Mesa não identificada','vermelho'); return; }
-  if(!st.itens.length){ toast('Nenhum item no balcão','vermelho'); return; }
-  const total=st.itens.reduce((a,i)=>a+i.subtotal,0);
-  if(!confirm(`Transferir ${st.itens.length} item(s) (R$ ${fmt(total)}) para esta mesa?`)) return;
+// Atualizar botão "Enviar para Mesa" quando há itens no balcão
+function atualizarBtnTransferir(){
+  const btn=document.getElementById('btnTransferirMesa');
+  if(btn) btn.style.display=st.itens.length>0?'block':'none';
+}
+
+window.abrirTransferirParaMesa=function(){
+  if(!st.itens.length){ toast('Adicione itens primeiro','vermelho'); return; }
+  if(!getCaixaAberto()){ toast('Abra o caixa primeiro','vermelho'); return; }
+
+  // Listar mesas disponíveis (livres e ocupadas)
+  const total=cfg.numMesas||10;
+  const livres=[], ocupadas=[];
+  for(let i=1;i<=total;i++){
+    const m=getMesaOcupada(i);
+    if(m) ocupadas.push({num:i,mesa:m});
+    else livres.push(i);
+  }
+
+  const totalItens=st.itens.reduce((a,i)=>a+i.subtotal,0);
+
+  const div=document.createElement('div');
+  div.id='modalTransferir';
+  div.className='modal-ov show';
+  div.innerHTML=`
+  <div class="modal" style="max-width:400px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-size:.95rem;font-weight:800;">🪑 Enviar para Mesa</div>
+      <button onclick="document.getElementById('modalTransferir').remove()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--cinza);">✕</button>
+    </div>
+    <div style="background:var(--creme);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:.8rem;">
+      <strong>${st.itens.length} item(s)</strong> · Total: <strong style="color:var(--roxo)">R$ ${fmt(totalItens)}</strong>
+    </div>
+    ${livres.length?`
+    <div style="font-size:.72rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Abrir nova mesa</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+      ${livres.map(n=>`<button onclick="executarTransferencia(${n},true)" style="width:52px;height:52px;border-radius:10px;border:2px solid var(--lilas);background:#fff;font-size:1rem;font-weight:800;cursor:pointer;color:var(--acai);transition:all .15s;" onmouseover="this.style.background='var(--lilas)'" onmouseout="this.style.background='#fff'">🪑${n}</button>`).join('')}
+    </div>`:''}
+    ${ocupadas.length?`
+    <div style="font-size:.72rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Adicionar à mesa ocupada</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      ${ocupadas.map(({num,mesa})=>`
+        <button onclick="executarTransferencia(${num},false,'${mesa._key}')" style="width:70px;height:52px;border-radius:10px;border:2px solid var(--roxo);background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;font-size:.72rem;font-weight:700;cursor:pointer;text-align:center;line-height:1.3;">
+          🪑${num}<br><span style="font-size:.6rem;opacity:.85;">R$${fmt(getTotalMesaNum(num))}</span>
+        </button>`).join('')}
+    </div>`:''}
+    ${!livres.length&&!ocupadas.length?'<div style="text-align:center;color:var(--cinza);padding:20px;">Nenhuma mesa disponível</div>':''}
+  </div>`;
+  document.body.appendChild(div);
+};
+
+function getTotalMesaNum(num){
+  const m=getMesaOcupada(num);
+  return m?getTotalMesa(m):0;
+}
+
+window.executarTransferencia=async function(num, nova, mesaKey){
   const itensParaTransferir=[...st.itens];
+  const clienteKey=st.clienteSel?._key||null;
   setSyncDot('sync');
+
+  let key=mesaKey;
+  if(nova){
+    // abrir nova mesa
+    const novaRef=await push(ref(db,'mesas'),{
+      numero:num, status:'aberta',
+      abertura:new Date().toISOString(),
+      itens:{}, nomeCustom:'',
+      clienteKey:clienteKey||null
+    });
+    key=novaRef.key;
+  }
+
+  // transferir itens
   for(const item of itensParaTransferir){
-    await push(ref(db,'mesas/'+mesaAtual+'/itens'),{
+    await push(ref(db,'mesas/'+key+'/itens'),{
       tipo:item.tipo, nome:item.nome, emoji:item.emoji||'',
       cat:item.cat||'', peso:item.peso||0, preco:item.preco,
       subtotal:item.subtotal, fidelidade:item.fidelidade||false,
       obs:item.obs||'', adicionadoEm:new Date().toISOString()
     });
   }
+
   setSyncDot('ok');
   limpar();
-  toast(`${itensParaTransferir.length} item(s) transferidos para a mesa! ✅`,'verde');
-  const snap=await get(ref(db,'mesas/'+mesaAtual));
-  if(snap.exists()) renderComandaItens({...snap.val(),_key:mesaAtual});
-  document.getElementById('transferenciaBalcao').style.display='none';
+  const el=document.getElementById('modalTransferir');
+  if(el) el.remove();
+  toast(`${itensParaTransferir.length} item(s) enviados para Mesa ${num}! 🪑`,'verde');
 };
-
-function verificarTransferenciaBalcao(){
-  const box=document.getElementById('transferenciaBalcao');
-  if(!box) return;
-  if(st.itens.length>0){
-    box.style.display='block';
-    const preview=document.getElementById('transferItensPreview');
-    if(preview){
-      const total=st.itens.reduce((a,i)=>a+i.subtotal,0);
-      preview.innerHTML=st.itens.map(i=>`<div>• ${i.emoji||''} ${i.nome} — R$ ${fmt(i.subtotal)}</div>`).join('')+
-        `<div style="font-weight:800;margin-top:4px;color:var(--roxo);">Total: R$ ${fmt(total)}</div>`;
-    }
-  } else {
-    box.style.display='none';
-  }
-}
 
 // ── NOME EDITÁVEL DA MESA ─────────────────────────────────────
 window.editarNomeMesa=function(){
@@ -2578,17 +2640,20 @@ function renderModalMesa(mesa){
     cats.forEach(cat=>{
       const itensCat=prods.filter(p=>p.cat===cat.id);
       if(!itensCat.length)return;
-      html+=`<div style="margin-bottom:10px;">
-        <div style="font-size:.65rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">${cat.emoji} ${cat.nome}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;">
-          ${itensCat.map(p=>{
-            const icone=p.img?`<img src="${p.img}" style="width:28px;height:28px;border-radius:5px;object-fit:cover;vertical-align:middle;margin-right:4px;">`:`${p.emoji} `;
-            return `<button class="add-cp-btn" onclick="selProdMesa(${p.id})" style="display:flex;align-items:center;gap:4px;">
-              ${icone}<span>${p.nome}</span>
-              <span style="font-size:.62rem;color:var(--roxo);font-weight:700;">${p.tipo==='kg'?'R$'+fmt(p.preco)+'/kg':'R$'+fmt(p.preco)}</span>
-            </button>`;
-          }).join('')}
-        </div>
+      html+=`<div style="margin-bottom:8px;">
+        <div style="font-size:.62rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;padding:2px 0;border-bottom:1px solid var(--cinza-c);">${cat.emoji} ${cat.nome}</div>
+        ${itensCat.map(p=>{
+          const icone=p.img
+            ?`<img src="${p.img}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;flex-shrink:0;">`
+            :`<span class="add-cp-emoji">${p.emoji||'🍦'}</span>`;
+          return `<button class="add-cp-btn" onclick="selProdMesa(${p.id})">
+            ${icone}
+            <div class="add-cp-info">
+              <div class="add-cp-nome">${p.nome}</div>
+              <div class="add-cp-preco">${p.tipo==='kg'?'R$'+fmt(p.preco)+'/kg':'R$'+fmt(p.preco)+' (fixo)'}</div>
+            </div>
+          </button>`;
+        }).join('')}
       </div>`;
     });
     prodGrid.innerHTML=html;
