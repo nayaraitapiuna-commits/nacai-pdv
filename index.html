@@ -865,7 +865,30 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
         <div class="comanda-itens" id="comandaItens" style="max-height:200px;overflow-y:auto;margin-bottom:8px;"></div>
         <div class="comanda-total-box" id="comandaTotalBox" style="margin-bottom:10px;"></div>
 
-        <!-- DIVISÃO -->
+        <!-- DESCONTO / ACRÉSCIMO -->
+        <div style="background:var(--creme);border-radius:9px;padding:10px 12px;margin-bottom:10px;">
+          <div style="font-size:.68rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;">🏷️ Ajuste do total</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+            <button id="mesaBtnDesc" onclick="setMesaAjuste('desconto',this)" style="padding:6px;border:2px solid var(--lilas);border-radius:7px;background:#fff;font-size:.72rem;font-weight:700;cursor:pointer;color:var(--cinza);">🏷️ Desconto</button>
+            <button id="mesaBtnAcres" onclick="setMesaAjuste('acrescimo',this)" style="padding:6px;border:2px solid var(--lilas);border-radius:7px;background:#fff;font-size:.72rem;font-weight:700;cursor:pointer;color:var(--cinza);">➕ Acréscimo</button>
+          </div>
+          <div id="mesaAjusteBox" style="display:none;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+              <button id="mesaAjPct" onclick="setMesaAjusteTipo('pct',this)" style="padding:5px;border:1.5px solid var(--lilas);border-radius:6px;background:var(--roxo);color:#fff;font-size:.7rem;font-weight:700;cursor:pointer;">% Perc.</button>
+              <button id="mesaAjFix" onclick="setMesaAjusteTipo('fix',this)" style="padding:5px;border:1.5px solid var(--lilas);border-radius:6px;background:#fff;color:var(--cinza);font-size:.7rem;font-weight:700;cursor:pointer;">R$ Fixo</button>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" id="mesaAjValor" placeholder="0" min="0" step="0.01" oninput="calcMesaAjuste()" style="flex:1;padding:7px 9px;border:1.5px solid var(--lilas);border-radius:7px;font-size:.88rem;font-weight:700;outline:none;">
+              <span id="mesaAjResultado" style="font-size:.75rem;font-weight:700;color:var(--cinza);white-space:nowrap;"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOTAL FINAL (com ajuste) -->
+        <div id="mesaTotalFinalBox" style="background:var(--acai);border-radius:9px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:rgba(255,255,255,.7);font-size:.78rem;font-weight:700;">TOTAL A PAGAR</span>
+          <span style="color:#C084FC;font-size:1.2rem;font-weight:800;" id="mesaTotalFinal">R$ 0,00</span>
+        </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
           <span style="font-size:.72rem;font-weight:700;color:var(--cinza);">💰 Dividir conta</span>
           <button onclick="toggleDivisao()" style="font-size:.7rem;color:var(--roxo);background:none;border:1.5px solid var(--lilas);padding:3px 9px;border-radius:7px;cursor:pointer;font-weight:700;">Dividir</button>
@@ -2431,6 +2454,7 @@ window.abrirComanda=async function(num){
     mesaAtual=mesa._key;
   }
   mesaPagamentos={}; mesaPagAtivo=null; divisaoPessoas=2; prodSelMesa=null;
+  _mesaAjuste={tipo:'desconto',valorTipo:'pct',valor:0};
   renderModalMesa(mesa);
   document.getElementById('modalMesa').classList.add('show');
 };
@@ -2686,6 +2710,7 @@ function renderComandaItens(mesa){
   }
   const total=itens.reduce((a,i)=>a+i.subtotal,0);
   _mesaTotalAtual=total;
+  atualizarTotalFinalMesa();
   const totalBox=document.getElementById('comandaTotalBox');
   if(totalBox) totalBox.innerHTML=`
     <div class="comanda-total-linha"><span>Itens (${itens.length})</span><span>R$ ${fmt(total)}</span></div>
@@ -2800,10 +2825,65 @@ function atualizarDivisao(total){
 
 // ── PAGAMENTO DA MESA (misto) ─────────────────────────────────
 let _mesaTotalAtual=0;
+let _mesaAjuste={tipo:'desconto', valorTipo:'pct', valor:0}; // estado do ajuste da mesa
 
-function getMesaTotal(){ return _mesaTotalAtual; }
+function getMesaTotal(){
+  const sub=_mesaTotalAtual;
+  const v=_mesaAjuste.valor||0;
+  if(!v) return sub;
+  let ajuste=_mesaAjuste.valorTipo==='pct'?sub*(v/100):v;
+  ajuste=Math.min(ajuste,sub); // não vai negativo
+  return _mesaAjuste.tipo==='desconto'?sub-ajuste:sub+ajuste;
+}
 function getMesaTotalPago(){ return Object.values(mesaPagamentos).reduce((a,v)=>a+v,0); }
 function getMesaFalta(){ return Math.max(0,getMesaTotal()-getMesaTotalPago()); }
+
+window.setMesaAjuste=function(tipo,btn){
+  _mesaAjuste.tipo=tipo;
+  _mesaAjuste.valor=0;
+  document.getElementById('mesaAjValor').value='';
+  document.getElementById('mesaAjResultado').textContent='';
+  document.getElementById('mesaAjusteBox').style.display='block';
+  // highlight botão
+  document.getElementById('mesaBtnDesc').style.borderColor=tipo==='desconto'?'var(--verde)':'var(--lilas)';
+  document.getElementById('mesaBtnDesc').style.color=tipo==='desconto'?'var(--verde-e)':'var(--cinza)';
+  document.getElementById('mesaBtnAcres').style.borderColor=tipo==='acrescimo'?'var(--vermelho)':'var(--lilas)';
+  document.getElementById('mesaBtnAcres').style.color=tipo==='acrescimo'?'var(--vermelho)':'var(--cinza)';
+  document.getElementById('mesaAjValor').focus();
+};
+
+window.setMesaAjusteTipo=function(t,btn){
+  _mesaAjuste.valorTipo=t;
+  document.getElementById('mesaAjPct').style.background=t==='pct'?'var(--roxo)':'#fff';
+  document.getElementById('mesaAjPct').style.color=t==='pct'?'#fff':'var(--cinza)';
+  document.getElementById('mesaAjFix').style.background=t==='fix'?'var(--roxo)':'#fff';
+  document.getElementById('mesaAjFix').style.color=t==='fix'?'#fff':'var(--cinza)';
+  calcMesaAjuste();
+};
+
+window.calcMesaAjuste=function(){
+  const v=parseFloat(document.getElementById('mesaAjValor').value)||0;
+  _mesaAjuste.valor=v;
+  const sub=_mesaTotalAtual;
+  const ajuste=_mesaAjuste.valorTipo==='pct'?sub*(v/100):v;
+  const res=document.getElementById('mesaAjResultado');
+  const totalFinal=_mesaAjuste.tipo==='desconto'?sub-ajuste:sub+ajuste;
+  if(v>0){
+    const cor=_mesaAjuste.tipo==='desconto'?'var(--verde-e)':'var(--vermelho)';
+    const sinal=_mesaAjuste.tipo==='desconto'?'−':'＋';
+    res.style.color=cor;
+    res.textContent=`${sinal} R$ ${fmt(ajuste)}`;
+  } else { res.textContent=''; }
+  atualizarTotalFinalMesa();
+  atualizarMesaPagResumo(getMesaTotal());
+};
+
+function atualizarTotalFinalMesa(){
+  const el=document.getElementById('mesaTotalFinal');
+  if(el) el.textContent='R$ '+fmt(getMesaTotal());
+  // atualizar divisão se aberta
+  atualizarDivisao(getMesaTotal());
+}
 
 window.toggleMesaPag=function(forma,btn){
   if(mesaPagamentos[forma]!==undefined){
@@ -2901,7 +2981,12 @@ window.fecharMesa=async function(){
     pag:pagDesc, pagamentos:{...mesaPagamentos}, troco,
     cliente:clienteNome, clienteKey,
     tel:clienteKey&&clientes[clienteKey]?clientes[clienteKey].tel||'':'',
-    end:'', obs:'', itens, subtotal:total, taxa:0, total
+    end:'', obs:'', itens,
+    subtotal:_mesaTotalAtual,
+    ajusteTipo:_mesaAjuste.tipo,
+    ajusteValorTipo:_mesaAjuste.valorTipo,
+    ajusteValor:_mesaAjuste.valor,
+    taxa:0, total
   };
   await push(ref(db,'vendas'),v);
   await push(ref(db,'lancamentos'),{
