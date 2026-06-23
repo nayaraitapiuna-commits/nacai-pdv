@@ -3332,10 +3332,27 @@ window.deletarSangria=async function(cxKey,sKey){
 };
 
 // ── INIT ─────────────────────────────────────────────────────
-// Esconder loading e mostrar app imediatamente
-document.getElementById('loadingOv').style.display='none';
+// Garantir produtos padrão sempre disponíveis antes de renderizar
+if(!cfg.categorias||!cfg.categorias.length) cfg.categorias=[
+  {id:'gelados',nome:'Gelados',emoji:'🍦',fidelidade:true},
+  {id:'bomboniere',nome:'Bomboniere',emoji:'🍫',fidelidade:false},
+  {id:'bebidas',nome:'Bebidas',emoji:'🥤',fidelidade:false},
+  {id:'campanhas',nome:'Campanhas',emoji:'📣',fidelidade:false},
+];
+if(!cfg.produtos||!cfg.produtos.length) cfg.produtos=[
+  {id:1,nome:'Açaí Tradicional',emoji:'🍇',preco:28,cat:'gelados',tipo:'kg'},
+  {id:2,nome:'Açaí Premium',emoji:'💜',preco:35,cat:'gelados',tipo:'kg'},
+  {id:3,nome:'Açaí c/ Frutas',emoji:'🍓',preco:32,cat:'gelados',tipo:'kg'},
+  {id:4,nome:'Gelato',emoji:'🍦',preco:34,cat:'gelados',tipo:'kg'},
+  {id:5,nome:'Copo 300ml',emoji:'🥤',preco:2,cat:'bebidas',tipo:'fixo'},
+  {id:6,nome:'Copo 500ml',emoji:'🥤',preco:3,cat:'bebidas',tipo:'fixo'},
+  {id:7,nome:'Granola extra',emoji:'🌾',preco:2,cat:'gelados',tipo:'fixo'},
+  {id:8,nome:'Leite em pó',emoji:'🥛',preco:1.5,cat:'gelados',tipo:'fixo'},
+  {id:9,nome:'Calda morango',emoji:'🍓',preco:2,cat:'gelados',tipo:'fixo'},
+];
 
-// Renderiza com dados locais imediatamente
+// Mostrar app imediatamente com dados locais
+document.getElementById('loadingOv').style.display='none';
 renderProd();
 renderItens();
 document.getElementById('lVenc').value=new Date().toISOString().split('T')[0];
@@ -3344,6 +3361,15 @@ document.getElementById('numPed').textContent=String(cfg.numPed||1).padStart(3,'
 
 // Conecta ao Firebase em background (atualiza quando disponível)
 iniciarListeners();
+
+// Se Firebase demorar 5s, mostrar aviso mas continuar funcionando
+setTimeout(()=>{
+  const s=document.getElementById('statusFb');
+  if(s&&s.textContent.includes('Conectando')){
+    s.textContent='● Sem conexão';
+    s.style.background='rgba(231,76,60,.35)';
+  }
+},5000);
 </script>
 </body>
 </html>
