@@ -830,77 +830,90 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
       </div>
     </div>
 
-    <!-- ADICIONAR ITEM (só produtos por kg e fixos — sem seção "adicionais" separada) -->
-    <div class="add-comanda-form" id="addComandaForm">
-      <div class="add-comanda-titulo">➕ Adicionar item à comanda</div>
-      <div class="add-comanda-prod" id="addComandaProd"></div>
-      <div id="addComandaPesoBox" style="display:none;margin-top:8px;">
-        <div class="f-row"><label>Peso (gramas)</label>
-          <input type="number" class="fi" id="addComandaPeso" placeholder="Ex.: 500">
+    <!-- ADICIONAR ITEM — layout 2 colunas dentro do modal -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;">
+
+      <!-- COL ESQUERDA: PRODUTOS -->
+      <div class="add-comanda-form" id="addComandaForm" style="margin-bottom:0;">
+        <div class="add-comanda-titulo">➕ Adicionar à Comanda</div>
+        <div id="addComandaProd"></div>
+        <div id="addComandaPesoBox" style="display:none;margin-top:8px;">
+          <div class="f-row"><label>⚖️ Peso (gramas)</label>
+            <input type="number" class="fi" id="addComandaPeso" placeholder="Ex.: 500" style="font-size:1rem;font-weight:700;">
+          </div>
+        </div>
+        <div class="f-row" style="margin-top:6px;">
+          <input type="text" class="fi" id="addComandaObs" placeholder="Observação (opcional)...">
+        </div>
+        <button class="btn-add-item-mesa" onclick="addItemComanda()">➕ Adicionar</button>
+
+        <!-- TRANSFERIR DO BALCÃO -->
+        <div id="transferenciaBalcao" style="display:none;margin-top:10px;padding-top:10px;border-top:1.5px dashed var(--lilas);">
+          <div style="font-size:.7rem;font-weight:700;color:var(--cinza);margin-bottom:6px;">🛒 Pedido no balcão em aberto:</div>
+          <div id="transferItensPreview" style="font-size:.75rem;color:var(--acai);margin-bottom:8px;"></div>
+          <button onclick="transferirBalcaoParaMesa()" style="width:100%;background:linear-gradient(135deg,var(--amarelo),#E67E22);color:#fff;border:none;padding:9px;border-radius:8px;font-weight:700;font-size:.78rem;cursor:pointer;">
+            📋 Transferir pedido para esta mesa
+          </button>
         </div>
       </div>
-      <div class="f-row" style="margin-top:8px;">
-        <label>Observação do item</label>
-        <input type="text" class="fi" id="addComandaObs" placeholder="Ex.: sem granola...">
+
+      <!-- COL DIREITA: COMANDA + PAGAMENTO -->
+      <div>
+        <!-- ITENS DA COMANDA -->
+        <div style="font-size:.68rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">🧾 Comanda</div>
+        <div class="comanda-itens" id="comandaItens" style="max-height:200px;overflow-y:auto;margin-bottom:8px;"></div>
+        <div class="comanda-total-box" id="comandaTotalBox" style="margin-bottom:10px;"></div>
+
+        <!-- DIVISÃO -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:.72rem;font-weight:700;color:var(--cinza);">💰 Dividir conta</span>
+          <button onclick="toggleDivisao()" style="font-size:.7rem;color:var(--roxo);background:none;border:1.5px solid var(--lilas);padding:3px 9px;border-radius:7px;cursor:pointer;font-weight:700;">Dividir</button>
+        </div>
+        <div class="divisao-box" id="divisaoBox" style="margin-bottom:10px;">
+          <div class="divisao-pessoas">
+            <button class="btn-div menos" onclick="ajustarDivisao(-1)">−</button>
+            <span class="divisao-num" id="divisaoNum">2</span>
+            <button class="btn-div mais" onclick="ajustarDivisao(1)">+</button>
+            <span style="font-size:.75rem;color:var(--cinza);">pessoas</span>
+          </div>
+          <div class="divisao-val" id="divisaoVal">R$ 0,00</div>
+          <div class="divisao-sub" id="divisaoSub">por pessoa</div>
+        </div>
+
+        <!-- PAGAMENTO -->
+        <div style="font-size:.68rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">💳 Pagamento</div>
+        <div class="pag-grid" id="mesaPagGrid" style="margin-bottom:8px;">
+          <button class="pag-btn" id="mpbDinheiro" onclick="toggleMesaPag('dinheiro',this)"><span class="pag-icon">💵</span>Dinheiro<span class="pag-valor-badge" id="mbDinheiro" style="display:none"></span></button>
+          <button class="pag-btn" id="mpbPix" onclick="toggleMesaPag('pix',this)"><span class="pag-icon">📱</span>PIX<span class="pag-valor-badge" id="mbPix" style="display:none"></span></button>
+          <button class="pag-btn" id="mpbCredito" onclick="toggleMesaPag('credito',this)"><span class="pag-icon">💳</span>Crédito<span class="pag-valor-badge" id="mbCredito" style="display:none"></span></button>
+          <button class="pag-btn" id="mpbDebito" onclick="toggleMesaPag('debito',this)"><span class="pag-icon">💳</span>Débito<span class="pag-valor-badge" id="mbDebito" style="display:none"></span></button>
+        </div>
+        <div class="pag-entrada" id="mesaPagEntrada">
+          <div class="pag-entrada-titulo" id="mesaPagTitulo">Valor</div>
+          <div class="pag-entrada-valor">
+            <input type="number" id="mesaPagValor" placeholder="0,00" step="0.01" oninput="previewMesaPag()">
+            <button class="btn-conf-pag" onclick="confirmarMesaPag()">OK</button>
+          </div>
+          <div style="font-size:.65rem;color:var(--cinza);margin-top:3px;" id="mesaPagSug"></div>
+        </div>
+        <div class="pag-resumo" id="mesaPagResumo"></div>
+        <div class="pag-falta" id="mesaPagFalta">
+          <div style="font-size:.7rem;font-weight:700;color:#9E6A00;">⏳ Falta</div>
+          <div style="font-size:.95rem;font-weight:800;color:var(--amarelo);" id="mesaPagFaltaVal">R$ 0,00</div>
+        </div>
+        <div class="pag-troco" id="mesaPagTroco">
+          <div style="font-size:.7rem;font-weight:700;color:var(--verde-e);">💰 Troco</div>
+          <div style="font-size:.95rem;font-weight:800;color:var(--verde-e);" id="mesaPagTrocoVal">R$ 0,00</div>
+        </div>
+
+        <button class="btn-fechar-mesa" onclick="fecharMesa()" style="margin-top:10px;">✅ Fechar e Pagar</button>
+        <button class="btn-cancelar-mesa" onclick="cancelarMesa()" style="margin-top:6px;">🗑️ Cancelar Mesa</button>
       </div>
-      <button class="btn-add-item-mesa" onclick="addItemComanda()">➕ Adicionar à Comanda</button>
+
     </div>
 
-    <!-- ITENS DA COMANDA -->
-    <div class="comanda-itens" id="comandaItens"></div>
-
-    <!-- TOTAL -->
-    <div class="comanda-total-box" id="comandaTotalBox"></div>
-
-    <!-- DIVISÃO DE CONTA -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <span style="font-size:.75rem;font-weight:700;color:var(--cinza);">💰 Dividir conta</span>
-      <button onclick="toggleDivisao()" style="font-size:.72rem;color:var(--roxo);background:none;border:1.5px solid var(--lilas);padding:4px 10px;border-radius:8px;cursor:pointer;font-weight:700;">Dividir</button>
-    </div>
-    <div class="divisao-box" id="divisaoBox">
-      <div style="font-size:.72rem;color:var(--cinza);margin-bottom:8px;">Número de pessoas:</div>
-      <div class="divisao-pessoas">
-        <button class="btn-div menos" onclick="ajustarDivisao(-1)">−</button>
-        <span class="divisao-num" id="divisaoNum">2</span>
-        <button class="btn-div mais" onclick="ajustarDivisao(1)">+</button>
-        <span style="font-size:.75rem;color:var(--cinza);">pessoas</span>
-      </div>
-      <div class="divisao-val" id="divisaoVal">R$ 0,00</div>
-      <div class="divisao-sub" id="divisaoSub">por pessoa</div>
-    </div>
-
-    <!-- PAGAMENTO -->
-    <div class="sec-title" style="margin-top:4px;">💳 Pagamento</div>
-    <div class="pag-grid" id="mesaPagGrid">
-      <button class="pag-btn" id="mpbDinheiro" onclick="toggleMesaPag('dinheiro',this)"><span class="pag-icon">💵</span>Dinheiro<span class="pag-valor-badge" id="mbDinheiro" style="display:none"></span></button>
-      <button class="pag-btn" id="mpbPix" onclick="toggleMesaPag('pix',this)"><span class="pag-icon">📱</span>PIX<span class="pag-valor-badge" id="mbPix" style="display:none"></span></button>
-      <button class="pag-btn" id="mpbCredito" onclick="toggleMesaPag('credito',this)"><span class="pag-icon">💳</span>Crédito<span class="pag-valor-badge" id="mbCredito" style="display:none"></span></button>
-      <button class="pag-btn" id="mpbDebito" onclick="toggleMesaPag('debito',this)"><span class="pag-icon">💳</span>Débito<span class="pag-valor-badge" id="mbDebito" style="display:none"></span></button>
-    </div>
-    <div class="pag-entrada" id="mesaPagEntrada">
-      <div class="pag-entrada-titulo" id="mesaPagTitulo">Valor em Dinheiro</div>
-      <div class="pag-entrada-valor">
-        <input type="number" id="mesaPagValor" placeholder="0,00" step="0.01" oninput="previewMesaPag()">
-        <button class="btn-conf-pag" onclick="confirmarMesaPag()">Confirmar</button>
-      </div>
-      <div style="font-size:.68rem;color:var(--cinza);margin-top:4px;" id="mesaPagSug"></div>
-    </div>
-    <div class="pag-resumo" id="mesaPagResumo"></div>
-    <div class="pag-falta" id="mesaPagFalta">
-      <div style="font-size:.7rem;font-weight:700;color:#9E6A00;">⏳ Ainda falta</div>
-      <div style="font-size:1rem;font-weight:800;color:var(--amarelo);" id="mesaPagFaltaVal">R$ 0,00</div>
-    </div>
-    <div class="pag-troco" id="mesaPagTroco">
-      <div style="font-size:.7rem;font-weight:700;color:var(--verde-e);">💰 Troco</div>
-      <div style="font-size:1rem;font-weight:800;color:var(--verde-e);" id="mesaPagTrocoVal">R$ 0,00</div>
-    </div>
-
-    <div class="modal-btns" style="margin-top:12px;">
-      <button class="btn-fechar-mesa" onclick="fecharMesa()">✅ Fechar Conta e Pagar</button>
-    </div>
-    <button class="btn-cancelar-mesa" onclick="cancelarMesa()">🗑️ Cancelar / Liberar Mesa</button>
-  </div>
-</div>
+  </div><!-- fim modal-mesa -->
+</div><!-- fim modalMesa -->
 
 <!-- ====== CAIXA ====== -->
 <div id="tab-caixa" class="page">
@@ -2464,6 +2477,47 @@ function atualizarFidelidadeMesa(key){
   const exp=c.pontosExpira?new Date(c.pontosExpira).toLocaleDateString('pt-BR'):'—';
   document.getElementById('mesaPontosExp').textContent=exp;
 }
+// ── TRANSFERIR BALCÃO → MESA ──────────────────────────────────
+window.transferirBalcaoParaMesa=async function(){
+  if(!mesaAtual){ toast('Mesa não identificada','vermelho'); return; }
+  if(!st.itens.length){ toast('Nenhum item no balcão','vermelho'); return; }
+  const total=st.itens.reduce((a,i)=>a+i.subtotal,0);
+  if(!confirm(`Transferir ${st.itens.length} item(s) (R$ ${fmt(total)}) para esta mesa?`)) return;
+  const itensParaTransferir=[...st.itens];
+  setSyncDot('sync');
+  for(const item of itensParaTransferir){
+    await push(ref(db,'mesas/'+mesaAtual+'/itens'),{
+      tipo:item.tipo, nome:item.nome, emoji:item.emoji||'',
+      cat:item.cat||'', peso:item.peso||0, preco:item.preco,
+      subtotal:item.subtotal, fidelidade:item.fidelidade||false,
+      obs:item.obs||'', adicionadoEm:new Date().toISOString()
+    });
+  }
+  setSyncDot('ok');
+  limpar();
+  toast(`${itensParaTransferir.length} item(s) transferidos para a mesa! ✅`,'verde');
+  const snap=await get(ref(db,'mesas/'+mesaAtual));
+  if(snap.exists()) renderComandaItens({...snap.val(),_key:mesaAtual});
+  document.getElementById('transferenciaBalcao').style.display='none';
+};
+
+function verificarTransferenciaBalcao(){
+  const box=document.getElementById('transferenciaBalcao');
+  if(!box) return;
+  if(st.itens.length>0){
+    box.style.display='block';
+    const preview=document.getElementById('transferItensPreview');
+    if(preview){
+      const total=st.itens.reduce((a,i)=>a+i.subtotal,0);
+      preview.innerHTML=st.itens.map(i=>`<div>• ${i.emoji||''} ${i.nome} — R$ ${fmt(i.subtotal)}</div>`).join('')+
+        `<div style="font-weight:800;margin-top:4px;color:var(--roxo);">Total: R$ ${fmt(total)}</div>`;
+    }
+  } else {
+    box.style.display='none';
+  }
+}
+
+// ── NOME EDITÁVEL DA MESA ─────────────────────────────────────
 window.editarNomeMesa=function(){
   const display=document.getElementById('comandaMesaNum');
   const input=document.getElementById('comandaMesaNomeInput');
@@ -2542,6 +2596,7 @@ function renderModalMesa(mesa){
 
   renderComandaItens(mesa);
   resetMesaPag(mesa);
+  verificarTransferenciaBalcao();
 }
 
 function renderComandaItens(mesa){
