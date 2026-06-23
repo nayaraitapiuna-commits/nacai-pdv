@@ -25,7 +25,8 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 .tab.active{color:#fff;border-bottom-color:#C084FC;}
 .tab:hover:not(.active){color:rgba(255,255,255,.85);}
 /* LOADING */
-#loadingOv{position:fixed;inset:0;background:var(--acai);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;}
+#loadingOv{position:fixed;inset:0;background:var(--acai);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;}
+#loadingOv.ativo{display:flex;}
 #loadingOv .spin{width:40px;height:40px;border:4px solid rgba(255,255,255,.2);border-top-color:#C084FC;border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* PAGES */
@@ -502,7 +503,7 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 <body>
 
 <!-- LOADING -->
-<div id="loadingOv" style="display:none;">
+<div id="loadingOv">
   <div style="font-size:2rem;">🍇</div>
   <div class="spin"></div>
   <div style="font-size:.85rem;opacity:.7;">Conectando...</div>
@@ -3352,7 +3353,6 @@ if(!cfg.produtos||!cfg.produtos.length) cfg.produtos=[
 ];
 
 // Mostrar app imediatamente com dados locais
-document.getElementById('loadingOv').style.display='none';
 renderProd();
 renderItens();
 document.getElementById('lVenc').value=new Date().toISOString().split('T')[0];
