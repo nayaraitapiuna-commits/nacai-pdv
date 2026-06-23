@@ -3302,6 +3302,8 @@ function exportarFechamentoCaixa(key){
   const cx=caixas[key]; if(!cx)return;
   mostrarModalFechamentoCaixa(key,cx,cx.resumo||{},cx.obsFechamento||'');
 }
+
+window.registrarSangria=async function(cxKey){
   const val=parseFloat(document.getElementById('sangriaVal').value)||0;
   const desc=document.getElementById('sangriaDesc').value.trim();
   if(val<=0){ toast('Informe o valor','vermelho'); return; }
@@ -3348,14 +3350,16 @@ document.getElementById('lVenc').value=new Date().toISOString().split('T')[0];
 document.getElementById('qData').value=new Date().toISOString().split('T')[0];
 document.getElementById('numPed').textContent=String(cfg.numPed||1).padStart(3,'0');
 
-// Conecta ao Firebase em background (atualiza quando disponível)
-iniciarListeners();
+// Conecta ao Firebase DEPOIS de renderizar a UI (não bloqueia)
+setTimeout(()=>{
+  try{ iniciarListeners(); }catch(e){ console.warn('Firebase erro:',e); }
+}, 100);
 
-// Se Firebase demorar 5s, mostrar aviso mas continuar funcionando
+// Se Firebase demorar 5s, mostrar aviso mas app continua funcionando
 setTimeout(()=>{
   const s=document.getElementById('statusFb');
   if(s&&s.textContent.includes('Conectando')){
-    s.textContent='● Sem conexão';
+    s.textContent='● Sem sync';
     s.style.background='rgba(231,76,60,.35)';
   }
 },5000);
