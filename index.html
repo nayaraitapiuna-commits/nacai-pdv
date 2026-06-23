@@ -502,10 +502,10 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 <body>
 
 <!-- LOADING -->
-<div id="loadingOv">
+<div id="loadingOv" style="display:none;">
   <div style="font-size:2rem;">🍇</div>
   <div class="spin"></div>
-  <div style="font-size:.85rem;opacity:.7;">Conectando ao banco de dados...</div>
+  <div style="font-size:.85rem;opacity:.7;">Conectando...</div>
 </div>
 
 <header>
@@ -1175,7 +1175,6 @@ function iniciarListeners(){
       set(ref(db,'config'), cfg);
       renderProd();
     }
-    document.getElementById('loadingOv').style.display='none';
     document.getElementById('statusFb').textContent='● Online';
     document.getElementById('statusFb').className='ok';
   },{onlyOnce:false});
@@ -3333,20 +3332,17 @@ window.deletarSangria=async function(cxKey,sKey){
 };
 
 // ── INIT ─────────────────────────────────────────────────────
-// Renderiza produtos imediatamente com dados locais (sem esperar Firebase)
+// Esconder loading e mostrar app imediatamente
+document.getElementById('loadingOv').style.display='none';
+
+// Renderiza com dados locais imediatamente
 renderProd();
 renderItens();
 document.getElementById('lVenc').value=new Date().toISOString().split('T')[0];
 document.getElementById('qData').value=new Date().toISOString().split('T')[0];
 document.getElementById('numPed').textContent=String(cfg.numPed||1).padStart(3,'0');
 
-// Fallback: se Firebase demorar, esconde o loading e mostra o app mesmo assim
-setTimeout(()=>{
-  const ov=document.getElementById('loadingOv');
-  if(ov&&ov.style.display!=='none') ov.style.display='none';
-}, 3000);
-
-// Conecta ao Firebase
+// Conecta ao Firebase em background (atualiza quando disponível)
 iniciarListeners();
 </script>
 </body>
