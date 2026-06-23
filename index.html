@@ -36,27 +36,35 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 .card+.card{margin-top:14px;}
 .sec-title{font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--cinza);font-weight:700;margin-bottom:12px;}
 /* ── LAYOUT PDV ── */
-.pdv-top{
-  display:grid;
-  grid-template-columns:260px 1fr 260px;
-  gap:14px;
-  align-items:start;
-  margin-bottom:14px;
-}
-.pdv-teclado{ min-width:0; }
-.pdv-pedido{ min-width:0; }
-.pdv-pag{ min-width:0; position:sticky; top:90px; }
-.pdv-produtos-area{ width:100%; }
-
-/* RESPONSIVO */
-@media(max-width:1024px){
-  .pdv-top{ grid-template-columns:240px 1fr; }
-  .pdv-pag{ grid-column:1/-1; position:static; }
+.pdv-top{display:grid;grid-template-columns:240px 1fr 250px;gap:14px;align-items:start;margin-bottom:14px;}
+.pdv-teclado{min-width:0;}
+.pdv-produtos-centro{min-width:0;}
+.pdv-pag{min-width:0;position:sticky;top:90px;}
+.pdv-bottom{margin-bottom:14px;}
+.pdv-bottom-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+.pdv-bottom-body{display:flex;gap:14px;align-items:start;margin-top:10px;}
+@media(max-width:1100px){
+  .pdv-top{grid-template-columns:220px 1fr;}
+  .pdv-pag{grid-column:1/-1;position:static;}
 }
 @media(max-width:680px){
-  .pdv-top{ grid-template-columns:1fr; }
-  .pdv-pag{ position:static; }
+  .pdv-top{grid-template-columns:1fr;}
+  .pdv-pag,.pdv-produtos-centro{position:static;}
+  .pdv-bottom-body{flex-direction:column;}
 }
+/* RANKING */
+.ranking-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border-radius:10px;margin-bottom:9px;box-shadow:0 1px 5px rgba(91,31,160,.07);}
+.rank-pos{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;flex-shrink:0;}
+.rank-1{background:linear-gradient(135deg,#B8860B,#FFD700);color:#fff;}
+.rank-2{background:linear-gradient(135deg,#708090,#C0C0C0);color:#fff;}
+.rank-3{background:linear-gradient(135deg,#8B4513,#CD7F32);color:#fff;}
+.rank-n{background:var(--lilas);color:var(--roxo-e);}
+.rank-info{flex:1;}
+.rank-nome{font-weight:700;font-size:.88rem;}
+.rank-det{font-size:.7rem;color:var(--cinza);margin-top:2px;}
+.rank-val{text-align:right;}
+.rank-total{font-size:.95rem;font-weight:800;color:var(--verde-e);}
+.rank-ped{font-size:.68rem;color:var(--cinza);}
 /* BALANÇA */
 .balanca-display{background:var(--acai);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .peso-value{color:#C084FC;font-size:2.6rem;font-weight:800;font-family:'Courier New',monospace;letter-spacing:2px;}
@@ -529,17 +537,14 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 
 <!-- AVISO CAIXA FECHADO -->
 <div id="avisoCaixaFechado" style="display:none;background:linear-gradient(135deg,#C0392B,var(--vermelho));color:#fff;border-radius:var(--r);padding:12px 18px;margin-bottom:14px;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-  <div>
-    <div style="font-size:.85rem;font-weight:800;">⚠️ Caixa fechado</div>
-    <div style="font-size:.72rem;opacity:.85;margin-top:2px;">Abra o caixa antes de realizar vendas</div>
-  </div>
+  <div><div style="font-size:.85rem;font-weight:800;">⚠️ Caixa fechado</div><div style="font-size:.72rem;opacity:.85;margin-top:2px;">Abra o caixa antes de realizar vendas</div></div>
   <button onclick="irTab('caixa',document.querySelectorAll('.tab')[2])" style="background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);color:#fff;padding:7px 16px;border-radius:8px;font-weight:700;font-size:.78rem;cursor:pointer;">🔓 Abrir Caixa</button>
 </div>
 
-<!-- LINHA DE CIMA: TECLADO | PEDIDO | PAGAMENTO -->
+<!-- ══ LINHA 1: TECLADO | PRODUTOS | PAGAMENTO ══ -->
 <div class="pdv-top">
 
-  <!-- ══ TECLADO + PESO ══ -->
+  <!-- TECLADO + PESO -->
   <div class="pdv-teclado">
     <div class="card" style="padding:14px;">
       <div class="balanca-display" style="margin-bottom:10px;">
@@ -570,7 +575,7 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
         <button class="btn-num" onclick="dg('000')">000</button>
         <button class="btn-num gz" onclick="pr(1500)">1,5kg</button>
       </div>
-      <button class="btn-add-kg" onclick="addKg()" style="margin-top:10px;">➕ Adicionar</button>
+      <button class="btn-add-kg" onclick="addKg()" style="margin-top:10px;">➕ Adicionar ao Pedido</button>
       <div class="prod-sel-destaque" id="prodSelDestaque" style="margin-top:8px;">
         <span id="prodSelEmoji" style="font-size:1.3rem;"></span>
         <div>
@@ -581,51 +586,15 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
     </div>
   </div>
 
-  <!-- ══ PEDIDO + CLIENTE + ITENS ══ -->
-  <div class="pdv-pedido">
+  <!-- PRODUTOS NO CENTRO -->
+  <div class="pdv-produtos-centro">
     <div class="card" style="padding:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div style="font-size:.68rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;">
-          <span class="sync-dot" id="syncDot"></span>Pedido #<span id="numPed">001</span>
-        </div>
-        <div class="tipo-row">
-          <button class="tipo-btn active" onclick="setTipo('balcao',this)">🏪 Balcão</button>
-          <button class="tipo-btn" onclick="setTipo('delivery',this)">🛵 Delivery</button>
-          <button class="tipo-btn" onclick="setTipo('retirada',this)">📦 Retirada</button>
-        </div>
-      </div>
-      <div class="del-form" id="delForm">
-        <div id="cliBuscaBox">
-          <div id="cliSelBadge" style="display:none;" class="cliente-sel-badge">
-            <span>👤</span><span class="cliente-sel-nome" id="cliSelNome"></span>
-            <button class="btn-rm-cli" onclick="removerClienteSel()">✕</button>
-          </div>
-          <div class="cliente-busca" id="cliBuscaWrap">
-            <span class="cliente-busca-icon">🔍</span>
-            <input type="text" id="cliBusca" placeholder="Buscar cliente..." oninput="buscarCliente()" autocomplete="off">
-            <div class="cliente-dropdown" id="cliDropdown"></div>
-          </div>
-        </div>
-        <div class="form-2col">
-          <div class="f-row"><label>Nome</label><input type="text" id="fNome" placeholder="Maria Silva" oninput="salvarClienteAuto()"></div>
-          <div class="f-row"><label>Telefone</label><input type="text" id="fTel" placeholder="(85) 9 0000-0000"></div>
-        </div>
-        <div class="f-row" id="fEndRow"><label>Endereço</label><textarea id="fEnd" placeholder="Rua, número, bairro..." style="height:44px;"></textarea></div>
-        <div class="f-row"><label>Observações</label><input type="text" id="fObs" placeholder="Ex.: sem granola..."></div>
-      </div>
-      <div class="itens-lista" id="itensList" style="max-height:260px;overflow-y:auto;">
-        <div class="empty-cart">Nenhum item.<br>Selecione um produto abaixo.</div>
-      </div>
-      <div class="totais-box" style="margin-bottom:0;margin-top:10px;">
-        <div class="tot-linha"><span>Subtotal</span><span id="tSub">R$ 0,00</span></div>
-        <div class="tot-linha" id="tTaxaRow" style="display:none"><span>Entrega</span><span id="tTaxa">R$ 0,00</span></div>
-        <div class="tot-linha" id="tDescRow" style="display:none;color:var(--verde-e)"><span>Desconto</span><span id="tDesc">- R$ 0,00</span></div>
-        <div class="tot-linha big"><span>TOTAL</span><span id="tGeral">R$ 0,00</span></div>
-      </div>
+      <div id="catTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      <div id="prodGrid"></div>
     </div>
   </div>
 
-  <!-- ══ PAGAMENTO + DESCONTO + FINALIZAR ══ -->
+  <!-- PAGAMENTO + DESCONTO + FINALIZAR -->
   <div class="pdv-pag">
     <div class="card" style="padding:14px;margin-bottom:12px;">
       <div class="desconto-titulo" style="margin-bottom:8px;">🏷️ Desconto</div>
@@ -672,18 +641,79 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 
 </div><!-- fim pdv-top -->
 
-<!-- LINHA DE BAIXO: PRODUTOS (largura total) -->
-<div class="pdv-produtos-area">
-  <div class="card" style="padding:16px;">
-    <div id="catTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
-    <div id="prodGrid"></div>
+<!-- ══ LINHA 2: CLIENTE + PEDIDO + ITENS + TOTAL (largura total) ══ -->
+<div class="pdv-bottom">
+  <div class="card" style="padding:14px;">
+
+    <!-- LINHA: Número pedido | Tipo | Cliente (sempre visível) -->
+    <div class="pdv-bottom-header">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1;">
+        <div style="font-size:.68rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;">
+          <span class="sync-dot" id="syncDot"></span>Pedido #<span id="numPed">001</span>
+        </div>
+        <div class="tipo-row" style="margin-bottom:0;">
+          <button class="tipo-btn active" onclick="setTipo('balcao',this)">🏪 Balcão</button>
+          <button class="tipo-btn" onclick="setTipo('delivery',this)">🛵 Delivery</button>
+          <button class="tipo-btn" onclick="setTipo('retirada',this)">📦 Retirada</button>
+        </div>
+      </div>
+      <!-- BUSCA CLIENTE — sempre visível em todos os tipos -->
+      <div style="flex:1;min-width:220px;max-width:380px;position:relative;">
+        <div id="cliSelBadge" style="display:none;" class="cliente-sel-badge">
+          <span>👤</span><span class="cliente-sel-nome" id="cliSelNome"></span>
+          <button class="btn-rm-cli" onclick="removerClienteSel()">✕</button>
+        </div>
+        <div class="cliente-busca" id="cliBuscaWrap">
+          <span class="cliente-busca-icon">🔍</span>
+          <input type="text" id="cliBusca" placeholder="Identificar cliente (fidelidade)..." oninput="buscarCliente()" autocomplete="off">
+          <div class="cliente-dropdown" id="cliDropdown"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAMPOS EXTRAS: só delivery/retirada -->
+    <div class="del-form" id="delForm">
+      <div id="cliBuscaBox" style="display:none;"><!-- busca movida para cima --></div>
+      <div class="form-2col" style="margin-top:10px;">
+        <div class="f-row"><label>Nome</label><input type="text" id="fNome" placeholder="Maria Silva" oninput="salvarClienteAuto()"></div>
+        <div class="f-row"><label>Telefone</label><input type="text" id="fTel" placeholder="(85) 9 0000-0000"></div>
+      </div>
+      <div class="f-row" id="fEndRow"><label>Endereço</label><textarea id="fEnd" placeholder="Rua, número, bairro..." style="height:44px;"></textarea></div>
+      <div class="f-row"><label>Observações</label><input type="text" id="fObs" placeholder="Ex.: sem granola..."></div>
+    </div>
+
+    <!-- ITENS + TOTAL em linha -->
+    <div class="pdv-bottom-body">
+      <div style="flex:1;min-width:0;">
+        <div class="itens-lista" id="itensList" style="max-height:200px;overflow-y:auto;">
+          <div class="empty-cart">Nenhum item. Selecione um produto acima.</div>
+        </div>
+      </div>
+      <div style="min-width:200px;">
+        <div class="totais-box" style="margin-bottom:0;">
+          <div class="tot-linha"><span>Subtotal</span><span id="tSub">R$ 0,00</span></div>
+          <div class="tot-linha" id="tTaxaRow" style="display:none"><span>Entrega</span><span id="tTaxa">R$ 0,00</span></div>
+          <div class="tot-linha" id="tDescRow" style="display:none;color:var(--verde-e)"><span>Desconto</span><span id="tDesc">- R$ 0,00</span></div>
+          <div class="tot-linha big"><span>TOTAL</span><span id="tGeral">R$ 0,00</span></div>
+        </div>
+      </div>
+    </div>
+
   </div>
-</div>
+</div><!-- fim pdv-bottom -->
 
 </div><!-- fim tab-venda -->
 
 <!-- ====== CLIENTES ====== -->
 <div id="tab-clientes" class="page">
+  <!-- TABS INTERNAS -->
+  <div style="display:flex;gap:6px;margin-bottom:16px;">
+    <button class="f-btn active" id="cliTabLista" onclick="setCliTab('lista',this)">👥 Clientes</button>
+    <button class="f-btn" id="cliTabRank" onclick="setCliTab('ranking',this)">🏆 Ranking</button>
+  </div>
+
+  <!-- LISTA DE CLIENTES -->
+  <div id="cliSecLista">
   <div class="cli-grid">
     <div>
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
@@ -707,6 +737,18 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
       </div>
     </div>
   </div>
+  </div><!-- fim cliSecLista -->
+
+  <!-- RANKING -->
+  <div id="cliSecRanking" style="display:none;">
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="f-btn active" id="rankBtnValor" onclick="setRankTipo('valor',this)">💰 Maior valor</button>
+      <button class="f-btn" id="rankBtnPed" onclick="setRankTipo('pedidos',this)">🛒 Mais pedidos</button>
+      <button class="f-btn" id="rankBtnFid" onclick="setRankTipo('fidelidade',this)">⭐ Fidelidade</button>
+    </div>
+    <div id="rankingLista"></div>
+  </div>
+
 </div>
 
 <!-- MODAL DETALHE CLIENTE -->
@@ -1207,7 +1249,7 @@ window.irTab=function(nome,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+nome).classList.add('active');
   if(el) el.classList.add('active');
-  if(nome==='clientes') renderClientes();
+  if(nome==='clientes'){ setCliTab('lista',document.getElementById('cliTabLista')); renderClientes(); }
   if(nome==='mesas') renderMesas();
   if(nome==='caixa') renderCaixa();
   if(nome==='historico') renderHist('todos');
@@ -2119,7 +2161,66 @@ window.salvarClienteAuto=function(){
   // salva automaticamente o cliente ao finalizar venda se não existir
 };
 
-// ── MÓDULO CLIENTES ───────────────────────────────────────────
+// ── TABS INTERNAS DE CLIENTES ────────────────────────────────
+let rankTipo='valor';
+window.setCliTab=function(tab,btn){
+  document.querySelectorAll('#tab-clientes .f-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('cliSecLista').style.display=tab==='lista'?'block':'none';
+  document.getElementById('cliSecRanking').style.display=tab==='ranking'?'block':'none';
+  if(tab==='ranking') renderRanking();
+};
+
+window.setRankTipo=function(tipo,btn){
+  rankTipo=tipo;
+  document.querySelectorAll('#cliSecRanking .f-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderRanking();
+};
+
+function renderRanking(){
+  const el=document.getElementById('rankingLista'); if(!el)return;
+  const clis=Object.entries(clientes).map(([k,c])=>{
+    const pedCli=Object.values(vendas).filter(v=>v.clienteKey===k||(c.tel&&v.tel===c.tel));
+    const totalGasto=pedCli.reduce((a,v)=>a+v.total,0);
+    const numPed=pedCli.length;
+    const {gastoAcum,creditos}=getPontosValidos(c);
+    return {...c,_key:k,totalGasto,numPed,gastoAcum,creditos};
+  });
+
+  let sorted;
+  if(rankTipo==='valor') sorted=[...clis].sort((a,b)=>b.totalGasto-a.totalGasto);
+  else if(rankTipo==='pedidos') sorted=[...clis].sort((a,b)=>b.numPed-a.numPed);
+  else sorted=[...clis].sort((a,b)=>(b.creditos*FID_CREDITO+b.gastoAcum/FID_META)-(a.creditos*FID_CREDITO+a.gastoAcum/FID_META));
+
+  sorted=sorted.filter(c=>rankTipo==='fidelidade'?c.gastoAcum>0||c.creditos>0:c.numPed>0).slice(0,20);
+
+  if(!sorted.length){ el.innerHTML='<div style="text-align:center;color:var(--cinza);padding:40px;">Nenhum dado ainda.</div>'; return; }
+
+  const medalha=(i)=>i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+  const emoji=(i)=>i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}°`;
+
+  el.innerHTML=sorted.map((c,i)=>{
+    const sub=rankTipo==='valor'
+      ?`${c.numPed} pedido(s)`
+      :rankTipo==='pedidos'
+      ?`R$ ${fmt(c.totalGasto)} total`
+      :`R$ ${fmt(c.gastoAcum)} acumulado · ${c.creditos} crédito(s)`;
+    const valDisplay=rankTipo==='valor'
+      ?`<div class="rank-total">R$ ${fmt(c.totalGasto)}</div><div class="rank-ped">${c.numPed} pedidos</div>`
+      :rankTipo==='pedidos'
+      ?`<div class="rank-total">${c.numPed} pedidos</div><div class="rank-ped">R$ ${fmt(c.totalGasto)}</div>`
+      :`<div class="rank-total" style="color:var(--roxo);">R$ ${fmt(c.creditos*FID_CREDITO)} crédito</div><div class="rank-ped">R$ ${fmt(c.gastoAcum)} acum.</div>`;
+    return `<div class="ranking-item" onclick="abrirModalCliente('${c._key}')" style="cursor:pointer;">
+      <div class="rank-pos ${medalha(i)}">${emoji(i)}</div>
+      <div class="rank-info">
+        <div class="rank-nome">${c.nome}</div>
+        <div class="rank-det">${c.tel||''}${c.tel&&sub?' · ':''}${sub}</div>
+      </div>
+      <div class="rank-val">${valDisplay}</div>
+    </div>`;
+  }).join('');
+}
 let cliAtualKey=null;
 
 function renderClientes(){
