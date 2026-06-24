@@ -537,6 +537,9 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
   <button onclick="irTab('caixa',document.querySelectorAll('.tab')[2])" style="background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);color:#fff;padding:7px 16px;border-radius:8px;font-weight:700;font-size:.78rem;cursor:pointer;">🔓 Abrir Caixa</button>
 </div>
 
+<!-- AVISO CAMPANHA ATIVA -->
+<div id="campAviso" style="display:none;background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;border-radius:var(--r);padding:10px 16px;margin-bottom:10px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.8rem;font-weight:600;"></div>
+
 <!-- ══ LINHA 1: TECLADO | PRODUTOS | PAGAMENTO ══ -->
 <div class="pdv-top">
 
@@ -1067,12 +1070,88 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
     <div class="cfg-row"><div><div class="cfg-lbl">WhatsApp</div><div class="cfg-sub">Para envio de recibo</div></div><input type="text" id="cfgWpp"></div>
     <button class="btn-save" onclick="salvarCfg()">💾 Salvar configurações</button>
   </div>
+
+  <!-- DESCONTO -->
+  <div class="cfg-section">
+    <h3>🏷️ Controle de Desconto</h3>
+    <div class="cfg-row">
+      <div>
+        <div class="cfg-lbl">Limite máximo de desconto (%)</div>
+        <div class="cfg-sub">Atendente não pode ultrapassar este percentual. 0 = sem limite.</div>
+      </div>
+      <input type="number" id="cfgDescontoMax" min="0" max="100" step="1" placeholder="Ex.: 20">
+    </div>
+    <div class="cfg-row">
+      <div>
+        <div class="cfg-lbl">Requer aprovação acima de (%)</div>
+        <div class="cfg-sub">Exibe aviso se desconto ultrapassar este valor. 0 = desativado.</div>
+      </div>
+      <input type="number" id="cfgDescontoAviso" min="0" max="100" step="1" placeholder="Ex.: 10">
+    </div>
+    <button class="btn-save" onclick="salvarCfgDesconto()">💾 Salvar</button>
+  </div>
+
+  <!-- FIDELIDADE -->
+  <div class="cfg-section">
+    <h3>⭐ Programa de Fidelidade</h3>
+    <div class="cfg-row">
+      <div><div class="cfg-lbl">Gasto para ganhar crédito (R$)</div><div class="cfg-sub">A cada R$ X em categorias fidelidade → ganha 1 crédito</div></div>
+      <input type="number" id="cfgFidMeta" min="1" step="10" placeholder="200">
+    </div>
+    <div class="cfg-row">
+      <div><div class="cfg-lbl">Valor do crédito (R$)</div><div class="cfg-sub">Quanto vale cada crédito de desconto</div></div>
+      <input type="number" id="cfgFidCredito" min="1" step="1" placeholder="10">
+    </div>
+    <div class="cfg-row">
+      <div><div class="cfg-lbl">Expiração dos pontos (dias)</div><div class="cfg-sub">Quantos dias sem compra para expirar</div></div>
+      <input type="number" id="cfgFidExpira" min="1" step="1" placeholder="30">
+    </div>
+    <div style="font-size:.72rem;color:var(--cinza);margin:8px 0 4px;">⭐ Categorias que participam da fidelidade:</div>
+    <div id="cfgFidCats" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+    <button class="btn-save" onclick="salvarCfgFidelidade()">💾 Salvar programa</button>
+  </div>
+
+  <!-- CAMPANHAS -->
+  <div class="cfg-section">
+    <h3>📣 Campanhas e Promoções</h3>
+    <div style="font-size:.72rem;color:var(--cinza);margin-bottom:12px;">Campanhas ativas aparecem automaticamente na tela de venda durante o período definido.</div>
+    <div id="campanhasLista"></div>
+    <div style="background:var(--creme);border-radius:10px;padding:14px;margin-top:12px;">
+      <div style="font-size:.72rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">➕ Nova Campanha</div>
+      <div class="f-row"><label>Nome da campanha</label><input type="text" class="fi" id="campNome" placeholder="Ex.: Promoção Junina, Aniversário..."></div>
+      <div class="form-2col">
+        <div class="f-row"><label>Início</label><input type="date" class="fi" id="campInicio"></div>
+        <div class="f-row"><label>Fim</label><input type="date" class="fi" id="campFim"></div>
+      </div>
+      <div class="form-2col">
+        <div class="f-row"><label>Tipo de desconto</label>
+          <select class="fi" id="campTipo">
+            <option value="pct">% Percentual</option>
+            <option value="fix">R$ Valor fixo</option>
+          </select>
+        </div>
+        <div class="f-row"><label>Valor do desconto</label><input type="number" class="fi" id="campValor" placeholder="Ex.: 15" step="0.5"></div>
+      </div>
+      <div class="f-row"><label>Aplica em</label>
+        <select class="fi" id="campAplica">
+          <option value="todos">Todos os produtos</option>
+          <option value="gelados">🍦 Gelados</option>
+          <option value="bomboniere">🍫 Bomboniere</option>
+          <option value="bebidas">🥤 Bebidas</option>
+        </select>
+      </div>
+      <div class="f-row"><label>Descrição (aparece na venda)</label><input type="text" class="fi" id="campDesc" placeholder="Ex.: 15% OFF em todos os gelados!"></div>
+      <button class="btn-lan" onclick="salvarCampanha()">💾 Salvar Campanha</button>
+    </div>
+  </div>
+
   <div class="cfg-section">
     <h3>🏷️ Categorias e Produtos</h3>
-    <div style="font-size:.72rem;color:var(--cinza);margin-bottom:14px;">Cada categoria pode ter vários produtos. Clique em ▾ para expandir e adicionar produtos.</div>
+    <div style="font-size:.72rem;color:var(--cinza);margin-bottom:14px;">Clique em ▾ para expandir e adicionar produtos.</div>
     <div id="catCfgLista"></div>
     <button class="btn-add-p" onclick="addCatCfg()" style="margin-top:4px;">+ Nova categoria</button>
   </div>
+
   <div class="cfg-section" style="border:1.5px solid #FFD5D5;">
     <h3 style="color:var(--vermelho);">🗑️ Zerar dados</h3>
     <button onclick="zerarVendas()" style="background:var(--vermelho);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.82rem;margin-bottom:8px;">Apagar histórico de vendas</button><br>
@@ -1923,6 +2002,15 @@ function renderCfg(){
   document.getElementById('cfgTaxa').value=cfg.taxa||3;
   document.getElementById('cfgWpp').value=cfg.wpp||'';
   document.getElementById('cfgNumMesas').value=cfg.numMesas||10;
+  // desconto
+  const dm=document.getElementById('cfgDescontoMax');
+  const da=document.getElementById('cfgDescontoAviso');
+  if(dm) dm.value=cfg.descontoMax||0;
+  if(da) da.value=cfg.descontoAviso||0;
+  // fidelidade
+  renderCfgFidelidade();
+  // campanhas
+  renderCampanhas();
 
   const cats=getCategorias();
   const prods=getProdutos();
@@ -2205,7 +2293,172 @@ window.salvarClienteAuto=function(){
   // salva automaticamente o cliente ao finalizar venda se não existir
 };
 
-// ── TABS INTERNAS DE CLIENTES ────────────────────────────────
+// ── DESCONTO COM LIMITE ───────────────────────────────────────
+// Sobrescreve aplicarDesconto para checar limite
+const _aplicarDescontoOrig=window.aplicarDesconto;
+window.aplicarDesconto=function(){
+  const maxPct=cfg.descontoMax||0;
+  const v=parseFloat(document.getElementById('descontoInput').value)||0;
+  if(maxPct>0 && st.desconto.tipo==='pct' && v>maxPct){
+    document.getElementById('descontoInput').value=maxPct;
+    toast(`Limite máximo de desconto: ${maxPct}%`,'vermelho');
+    st.desconto.valor=maxPct;
+  } else {
+    st.desconto.valor=v;
+  }
+  // aviso
+  const avisoMin=cfg.descontoAviso||0;
+  if(avisoMin>0 && st.desconto.tipo==='pct' && v>avisoMin && v<=maxPct){
+    toast(`⚠️ Desconto acima de ${avisoMin}% — verifique autorização`,'vermelho');
+  }
+  updTot();
+};
+
+window.salvarCfgDesconto=async function(){
+  cfg.descontoMax=parseFloat(document.getElementById('cfgDescontoMax').value)||0;
+  cfg.descontoAviso=parseFloat(document.getElementById('cfgDescontoAviso').value)||0;
+  await salvarCfgFb();
+  toast('Configuração de desconto salva ✓','verde');
+};
+
+// ── FIDELIDADE CONFIGURÁVEL ───────────────────────────────────
+window.salvarCfgFidelidade=async function(){
+  cfg.fidMeta=parseFloat(document.getElementById('cfgFidMeta').value)||200;
+  cfg.fidCredito=parseFloat(document.getElementById('cfgFidCredito').value)||10;
+  cfg.fidExpira=parseInt(document.getElementById('cfgFidExpira').value)||30;
+  await salvarCfgFb();
+  toast('Programa de fidelidade salvo ✓','verde');
+};
+
+// Usar valores configuráveis nas constantes de fidelidade
+Object.defineProperty(window,'FID_META',{get:()=>cfg.fidMeta||200});
+Object.defineProperty(window,'FID_CREDITO',{get:()=>cfg.fidCredito||10});
+Object.defineProperty(window,'EXPIRA_DIAS',{get:()=>cfg.fidExpira||30});
+
+function renderCfgFidelidade(){
+  // preencher campos
+  const fm=document.getElementById('cfgFidMeta');
+  const fc=document.getElementById('cfgFidCredito');
+  const fe=document.getElementById('cfgFidExpira');
+  if(fm) fm.value=cfg.fidMeta||200;
+  if(fc) fc.value=cfg.fidCredito||10;
+  if(fe) fe.value=cfg.fidExpira||30;
+  // checkboxes de categorias
+  const el=document.getElementById('cfgFidCats');
+  if(!el)return;
+  const cats=getCategorias();
+  el.innerHTML=cats.map(c=>`
+    <label style="display:flex;align-items:center;gap:6px;background:${c.fidelidade?'var(--lilas)':'var(--cinza-c)'};padding:5px 10px;border-radius:20px;cursor:pointer;font-size:.78rem;font-weight:600;">
+      <input type="checkbox" ${c.fidelidade?'checked':''} onchange="toggleCatFid('${c.id}',this.checked)">
+      ${c.emoji} ${c.nome}
+    </label>`).join('');
+}
+
+window.toggleCatFid=async function(id,val){
+  const c=(cfg.categorias||[]).find(x=>x.id===id); if(!c)return;
+  c.fidelidade=val;
+  await salvarCfgFb();
+  renderProd();
+  toast(`${c.nome} ${val?'incluída em':'removida da'} fidelidade ✓`,'verde');
+};
+
+// ── CAMPANHAS ─────────────────────────────────────────────────
+let campanhas={};
+
+// Listener Firebase para campanhas
+function iniciarListenerCampanhas(){
+  onValue(ref(db,'campanhas'),snap=>{
+    campanhas={};
+    if(snap.exists()) campanhas=snap.val();
+    const tabAtiva=document.querySelector('.tab.active');
+    if(tabAtiva&&tabAtiva.textContent.includes('Config')) renderCampanhas();
+    verificarCampanhaAtiva();
+  });
+}
+
+function campanhaAtiva(){
+  const hoje=new Date().toISOString().split('T')[0];
+  return Object.entries(campanhas)
+    .map(([k,c])=>({...c,_key:k}))
+    .find(c=>c.ativa&&c.inicio<=hoje&&c.fim>=hoje)||null;
+}
+
+function verificarCampanhaAtiva(){
+  const camp=campanhaAtiva();
+  const aviso=document.getElementById('campAviso');
+  if(aviso){
+    if(camp){
+      aviso.style.display='flex';
+      aviso.innerHTML=`<span>📣 <strong>${camp.nome}</strong> — ${camp.descricao||''} · ${camp.tipo==='pct'?camp.valor+'%':'R$'+fmt(camp.valor)+''} de desconto em ${camp.aplica==='todos'?'tudo':camp.aplica}</span>
+      <button onclick="aplicarCampanhaAtiva()" style="background:rgba(255,255,255,.25);border:1.5px solid rgba(255,255,255,.4);color:#fff;padding:4px 10px;border-radius:7px;font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;">Aplicar</button>`;
+    } else {
+      aviso.style.display='none';
+    }
+  }
+}
+
+window.aplicarCampanhaAtiva=function(){
+  const camp=campanhaAtiva(); if(!camp)return;
+  st.desconto={tipo:camp.tipo,valor:camp.valor,campanha:true};
+  document.getElementById(camp.tipo==='pct'?'dBtnPct':'dBtnFix').classList.add('active');
+  document.getElementById(camp.tipo==='pct'?'dBtnFix':'dBtnPct').classList.remove('active');
+  document.getElementById('descontoInput').value=camp.valor;
+  updTot();
+  toast(`🎉 Campanha "${camp.nome}" aplicada!`,'verde');
+};
+
+function renderCampanhas(){
+  const el=document.getElementById('campanhasLista'); if(!el)return;
+  const lista=Object.entries(campanhas).map(([k,c])=>({...c,_key:k}));
+  const hoje=new Date().toISOString().split('T')[0];
+  if(!lista.length){ el.innerHTML='<div style="text-align:center;color:var(--cinza);padding:16px;font-size:.8rem;">Nenhuma campanha cadastrada.</div>'; return; }
+  el.innerHTML=lista.map(c=>{
+    const status=c.fim<hoje?'Encerrada':c.inicio>hoje?'Agendada':c.ativa?'✅ Ativa':'⏸ Pausada';
+    const cor=c.fim<hoje?'var(--cinza)':c.inicio>hoje?'var(--azul)':c.ativa?'var(--verde-e)':'var(--amarelo)';
+    return `<div style="background:var(--creme);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:.85rem;">${c.nome}</div>
+        <div style="font-size:.7rem;color:var(--cinza);margin-top:2px;">${c.inicio} → ${c.fim} · ${c.tipo==='pct'?c.valor+'%':'R$'+fmt(c.valor)} em ${c.aplica==='todos'?'tudo':c.aplica}</div>
+        ${c.descricao?`<div style="font-size:.68rem;color:var(--cinza);">${c.descricao}</div>`:''}
+      </div>
+      <div style="text-align:right;display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
+        <span style="font-size:.65rem;font-weight:700;color:${cor};">${status}</span>
+        <div style="display:flex;gap:5px;">
+          ${c.fim>=hoje?`<button onclick="toggleCampanha('${c._key}',${!c.ativa})" style="background:${c.ativa?'var(--amarelo)':'var(--verde)'};color:#fff;border:none;padding:3px 8px;border-radius:6px;font-size:.68rem;font-weight:700;cursor:pointer;">${c.ativa?'Pausar':'Ativar'}</button>`:''}
+          <button onclick="deletarCampanha('${c._key}')" style="background:var(--vermelho);color:#fff;border:none;padding:3px 8px;border-radius:6px;font-size:.68rem;font-weight:700;cursor:pointer;">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.salvarCampanha=async function(){
+  const nome=document.getElementById('campNome').value.trim();
+  const inicio=document.getElementById('campInicio').value;
+  const fim=document.getElementById('campFim').value;
+  const tipo=document.getElementById('campTipo').value;
+  const valor=parseFloat(document.getElementById('campValor').value)||0;
+  const aplica=document.getElementById('campAplica').value;
+  const descricao=document.getElementById('campDesc').value.trim();
+  if(!nome||!inicio||!fim||!valor){ toast('Preencha todos os campos obrigatórios','vermelho'); return; }
+  if(fim<inicio){ toast('Data fim deve ser após o início','vermelho'); return; }
+  setSyncDot('sync');
+  await push(ref(db,'campanhas'),{nome,inicio,fim,tipo,valor,aplica,descricao,ativa:true,criadaEm:new Date().toISOString()});
+  setSyncDot('ok');
+  ['campNome','campInicio','campFim','campValor','campDesc'].forEach(id=>document.getElementById(id).value='');
+  toast('Campanha salva ✓','verde');
+};
+
+window.toggleCampanha=async function(key,ativa){
+  await update(ref(db,'campanhas/'+key),{ativa});
+  toast(ativa?'Campanha ativada ✓':'Campanha pausada','verde');
+};
+
+window.deletarCampanha=async function(key){
+  if(!confirm('Remover esta campanha?'))return;
+  await remove(ref(db,'campanhas/'+key));
+  toast('Campanha removida','vermelho');
+};
 let rankTipo='valor';
 window.setCliTab=function(tab,btn){
   document.querySelectorAll('#tab-clientes .f-btn').forEach(b=>b.classList.remove('active'));
@@ -3581,7 +3834,7 @@ document.getElementById('numPed').textContent=String(cfg.numPed||1).padStart(3,'
 
 // Conecta ao Firebase DEPOIS de renderizar a UI (não bloqueia)
 setTimeout(()=>{
-  try{ iniciarListeners(); }catch(e){ console.warn('Firebase erro:',e); }
+  try{ iniciarListeners(); iniciarListenerCampanhas(); }catch(e){ console.warn('Firebase erro:',e); }
 }, 100);
 
 // Se Firebase demorar 5s, mostrar aviso mas app continua funcionando
