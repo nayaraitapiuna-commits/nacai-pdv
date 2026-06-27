@@ -492,6 +492,33 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 .cx-hist-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .cx-hist-dot.ab{background:var(--verde);}
 .cx-hist-dot.fe{background:var(--vermelho);}
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:linear-gradient(135deg,var(--roxo-e),var(--roxo));z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:#fff;border-radius:20px;padding:32px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:pop .3s ease;}
+.login-logo{text-align:center;margin-bottom:24px;}
+.login-logo .ico{width:64px;height:64px;background:var(--lilas);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 10px;}
+.login-logo h2{font-size:1.3rem;font-weight:800;color:var(--acai);}
+.login-logo p{font-size:.75rem;color:var(--cinza);margin-top:3px;}
+.login-ops{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-bottom:18px;}
+.login-op-btn{background:var(--creme);border:2px solid var(--lilas);border-radius:10px;padding:12px 8px;cursor:pointer;text-align:center;transition:all .2s;}
+.login-op-btn:hover{border-color:var(--roxo);background:var(--lilas);}
+.login-op-avatar{width:40px;height:40px;border-radius:50%;background:var(--roxo);color:#fff;font-size:1.1rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;}
+.login-op-nome{font-size:.7rem;font-weight:700;color:var(--acai);}
+.login-senha-box{display:none;}
+.login-senha-titulo{font-size:.8rem;font-weight:700;color:var(--cinza);margin-bottom:10px;text-align:center;}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.pin-btn{background:var(--creme);border:1.5px solid var(--lilas);border-radius:10px;padding:14px;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.pin-btn:hover{background:var(--lilas);}
+.pin-btn.del{background:#FFE0E0;color:var(--vermelho);}
+.pin-display{display:flex;gap:8px;justify-content:center;margin-bottom:16px;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--lilas);transition:all .2s;}
+.pin-dot.fill{background:var(--roxo);border-color:var(--roxo);}
+.btn-voltar-login{background:none;border:none;color:var(--cinza);font-size:.8rem;cursor:pointer;text-decoration:underline;display:block;margin:8px auto 0;}
+.op-badge{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:.72rem;font-weight:700;}
+.op-badge:hover{background:rgba(255,255,255,.25);}
+.perm-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.perm-item{display:flex;align-items:center;gap:6px;font-size:.78rem;padding:4px 0;}
+.op-rank-item{background:#fff;border-radius:10px;padding:13px 15px;margin-bottom:9px;box-shadow:0 1px 5px rgba(91,31,160,.07);display:flex;align-items:center;gap:12px;}
 @media(max-width:768px){
   .caixa-grid{grid-template-columns:1fr;}
   .fin-layout,.fechamento-grid,.fin-resumo{grid-template-columns:1fr;}
@@ -504,6 +531,43 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 <body>
 
 <!-- LOADING -->
+<!-- TELA DE LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="ico">🍇</div>
+      <h2>NAÇAÍ PDV</h2>
+      <p>Selecione seu perfil para entrar</p>
+    </div>
+    <!-- LISTA DE OPERADORES -->
+    <div id="loginOps" class="login-ops"></div>
+    <!-- TECLADO PIN -->
+    <div class="login-senha-box" id="loginSenhaBox">
+      <div class="login-senha-titulo" id="loginSenhaTitulo">Digite sua senha</div>
+      <div class="pin-display" id="pinDisplay">
+        <div class="pin-dot"></div><div class="pin-dot"></div>
+        <div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="pin-grid">
+        <button class="pin-btn" onclick="pinDigit('1')">1</button>
+        <button class="pin-btn" onclick="pinDigit('2')">2</button>
+        <button class="pin-btn" onclick="pinDigit('3')">3</button>
+        <button class="pin-btn" onclick="pinDigit('4')">4</button>
+        <button class="pin-btn" onclick="pinDigit('5')">5</button>
+        <button class="pin-btn" onclick="pinDigit('6')">6</button>
+        <button class="pin-btn" onclick="pinDigit('7')">7</button>
+        <button class="pin-btn" onclick="pinDigit('8')">8</button>
+        <button class="pin-btn" onclick="pinDigit('9')">9</button>
+        <button class="pin-btn del" onclick="pinDel()">⌫</button>
+        <button class="pin-btn" onclick="pinDigit('0')">0</button>
+        <button class="pin-btn del" onclick="pinClear()">✕</button>
+      </div>
+      <div id="loginErro" style="text-align:center;color:var(--vermelho);font-size:.78rem;font-weight:700;min-height:20px;"></div>
+      <button class="btn-voltar-login" onclick="voltarLoginOps()">← Voltar</button>
+    </div>
+  </div>
+</div>
+
 <header>
   <div class="logo">
     <div class="logo-icon">🍇</div>
@@ -513,6 +577,12 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
     <span id="relogio"></span>
     <span id="statusFb">● Conectando...</span>
     <span id="saldo-header" style="font-size:.75rem;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.15);font-weight:700;"></span>
+    <!-- BADGE DO OPERADOR LOGADO -->
+    <div class="op-badge" onclick="trocarOperador()" id="opBadge" style="display:none;">
+      <span id="opBadgeAvatar" style="font-size:.9rem;"></span>
+      <span id="opBadgeNome"></span>
+      <span style="opacity:.6;font-size:.65rem;">↩ Sair</span>
+    </div>
   </div>
 </header>
 
@@ -1145,6 +1215,38 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
     </div>
   </div>
 
+  <!-- OPERADORES -->
+  <div class="cfg-section" id="cfgOperadoresSection">
+    <h3>👤 Operadores de Caixa</h3>
+    <div style="font-size:.72rem;color:var(--cinza);margin-bottom:12px;">Somente o administrador pode gerenciar operadores. A senha é um PIN de 4 dígitos.</div>
+    <div id="operadoresLista" style="margin-bottom:14px;"></div>
+    <div style="background:var(--creme);border-radius:10px;padding:14px;">
+      <div style="font-size:.72rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">➕ Novo Operador</div>
+      <div class="form-2col">
+        <div class="f-row"><label>Nome</label><input type="text" class="fi" id="opNome" placeholder="Ex.: Maria"></div>
+        <div class="f-row"><label>PIN (4 dígitos)</label><input type="password" class="fi" id="opPin" placeholder="••••" maxlength="4" inputmode="numeric"></div>
+      </div>
+      <div class="f-row"><label>Perfil</label>
+        <select class="fi" id="opPerfil">
+          <option value="operador">Operador (padrão)</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+      <div style="font-size:.72rem;font-weight:700;color:var(--cinza);margin:10px 0 6px;">Permissões:</div>
+      <div class="perm-grid" id="opPermsGrid">
+        <label class="perm-item"><input type="checkbox" id="perm_venda" checked> 🛒 Venda</label>
+        <label class="perm-item"><input type="checkbox" id="perm_mesas" checked> 🪑 Mesas</label>
+        <label class="perm-item"><input type="checkbox" id="perm_caixa" checked> 🏦 Caixa</label>
+        <label class="perm-item"><input type="checkbox" id="perm_clientes"> 👥 Clientes</label>
+        <label class="perm-item"><input type="checkbox" id="perm_financeiro"> 💰 Financeiro</label>
+        <label class="perm-item"><input type="checkbox" id="perm_relatorios"> 📊 Relatórios</label>
+        <label class="perm-item"><input type="checkbox" id="perm_config"> ⚙️ Config</label>
+        <label class="perm-item"><input type="checkbox" id="perm_desconto"> 🏷️ Desconto</label>
+      </div>
+      <button class="btn-lan" onclick="salvarOperador()" style="margin-top:12px;">💾 Salvar Operador</button>
+    </div>
+  </div>
+
   <div class="cfg-section">
     <h3>🏷️ Categorias e Produtos</h3>
     <div style="font-size:.72rem;color:var(--cinza);margin-bottom:14px;">Clique em ▾ para expandir e adicionar produtos.</div>
@@ -1622,6 +1724,8 @@ window.finalizarVenda=async function(){
     tipo:st.tipo, pag:pagDesc, pagamentos:{...st.pagamentos}, troco:Math.max(0,totalPago-total),
     cliente:nome||'Balcão',
     clienteKey:st.clienteSel?._key||null,
+    operadorKey:opAtual?._key||null,
+    operadorNome:opAtual?.nome||'',
     tel:document.getElementById('fTel').value.trim(),
     end:document.getElementById('fEnd').value.trim(),
     obs:document.getElementById('fObs').value.trim(),
@@ -1912,7 +2016,21 @@ function renderFechamento(){
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <button class="btn-exportar" onclick="exportarMes()">📄 Exportar TXT</button>
       <button class="btn-exportar verde-btn" onclick="whatsappMes()">📲 WhatsApp</button>
+    </div>
+    <!-- RELATÓRIO POR OPERADOR -->
+    <div class="card" style="margin-top:16px;">
+      <div class="sec-title">👤 Vendas por Operador no mês</div>
+      <div id="relOpMes"></div>
     </div>`;
+  // renderizar relatório de operadores
+  setTimeout(()=>{
+    const elOp=document.getElementById('relOpMes');
+    if(elOp){
+      const ini=new Date(anoFech,mesFech,1).toISOString().split('T')[0];
+      const fim=new Date(anoFech,mesFech+1,0).toISOString().split('T')[0];
+      renderRelatorioOperadores(elOp,ini,fim);
+    }
+  },50);
 }
 function textoFechamento(){
   const lancMes=Object.values(lancamentos).filter(l=>{ const d=new Date(l.data); return d.getMonth()===mesFech&&d.getFullYear()===anoFech; });
@@ -2293,7 +2411,231 @@ window.salvarClienteAuto=function(){
   // salva automaticamente o cliente ao finalizar venda se não existir
 };
 
-// ── DESCONTO COM LIMITE ───────────────────────────────────────
+// ── OPERADORES ────────────────────────────────────────────────
+let operadores={};
+let opAtual=null; // operador logado
+let pinBuffer='';
+let opSelecionado=null; // operador aguardando PIN
+
+const PERMS_TODAS=['venda','mesas','caixa','clientes','financeiro','relatorios','config','desconto'];
+const PERMS_ADMIN=PERMS_TODAS;
+const PERMS_OPERADOR=['venda','mesas','caixa'];
+
+function temPermissao(perm){
+  if(!opAtual)return false;
+  if(opAtual.perfil==='admin')return true;
+  return (opAtual.permissoes||[]).includes(perm);
+}
+
+// Listener de operadores
+function iniciarListenerOperadores(){
+  onValue(ref(db,'operadores'),snap=>{
+    operadores={};
+    if(snap.exists()) operadores=snap.val();
+    renderLoginOps();
+    renderOperadoresConfig();
+  });
+}
+
+function renderLoginOps(){
+  const el=document.getElementById('loginOps'); if(!el)return;
+  const lista=Object.entries(operadores).map(([k,o])=>({...o,_key:k}));
+  if(!lista.length){
+    // primeiro acesso — criar admin automaticamente
+    el.innerHTML=`<div style="text-align:center;grid-column:1/-1;padding:10px;">
+      <div style="font-size:.8rem;color:var(--cinza);margin-bottom:12px;">Nenhum operador cadastrado.<br>Crie o primeiro acesso de administrador:</div>
+      <div class="f-row" style="margin-bottom:8px;"><input type="text" class="fi" id="primeiroNome" placeholder="Seu nome"></div>
+      <div class="f-row" style="margin-bottom:10px;"><input type="password" class="fi" id="primeiroPIN" placeholder="PIN 4 dígitos" maxlength="4" inputmode="numeric"></div>
+      <button onclick="criarPrimeiroAdmin()" style="background:var(--roxo);color:#fff;border:none;padding:10px 24px;border-radius:10px;font-weight:700;cursor:pointer;font-size:.85rem;">Criar Administrador</button>
+    </div>`;
+    return;
+  }
+  el.innerHTML=lista.map(o=>`
+    <button class="login-op-btn" onclick="selecionarOperador('${o._key}')">
+      <div class="login-op-avatar">${o.nome.charAt(0).toUpperCase()}</div>
+      <div class="login-op-nome">${o.nome}</div>
+    </button>`).join('');
+}
+
+window.criarPrimeiroAdmin=async function(){
+  const nome=document.getElementById('primeiroNome').value.trim();
+  const pin=document.getElementById('primeiroPIN').value.trim();
+  if(!nome||pin.length!==4){ alert('Preencha nome e PIN de 4 dígitos'); return; }
+  await push(ref(db,'operadores'),{nome,pin,perfil:'admin',permissoes:PERMS_ADMIN,ativo:true,criadoEm:new Date().toISOString()});
+  toast('Administrador criado! Faça login.','verde');
+};
+
+window.selecionarOperador=function(key){
+  const op=operadores[key]; if(!op)return;
+  opSelecionado={...op,_key:key};
+  pinBuffer='';
+  document.getElementById('loginOps').style.display='none';
+  document.getElementById('loginSenhaBox').style.display='block';
+  document.getElementById('loginSenhaTitulo').textContent=`Olá, ${op.nome}! Digite seu PIN`;
+  document.getElementById('loginErro').textContent='';
+  atualizarPinDisplay();
+};
+
+window.voltarLoginOps=function(){
+  opSelecionado=null; pinBuffer='';
+  document.getElementById('loginOps').style.display='grid';
+  document.getElementById('loginSenhaBox').style.display='none';
+  document.getElementById('loginErro').textContent='';
+};
+
+window.pinDigit=function(d){
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=d;
+  atualizarPinDisplay();
+  if(pinBuffer.length===4) setTimeout(validarPin,200);
+};
+
+window.pinDel=function(){ pinBuffer=pinBuffer.slice(0,-1); atualizarPinDisplay(); };
+window.pinClear=function(){ pinBuffer=''; atualizarPinDisplay(); };
+
+function atualizarPinDisplay(){
+  const dots=document.querySelectorAll('.pin-dot');
+  dots.forEach((d,i)=>d.classList.toggle('fill',i<pinBuffer.length));
+}
+
+function validarPin(){
+  if(!opSelecionado)return;
+  if(pinBuffer===opSelecionado.pin){
+    entrarComoOperador(opSelecionado);
+  } else {
+    pinBuffer='';
+    atualizarPinDisplay();
+    const err=document.getElementById('loginErro');
+    err.textContent='PIN incorreto. Tente novamente.';
+    setTimeout(()=>err.textContent='',2000);
+  }
+}
+
+function entrarComoOperador(op){
+  opAtual=op;
+  // esconder tela de login
+  document.getElementById('loginScreen').style.display='none';
+  // atualizar badge no header
+  document.getElementById('opBadge').style.display='flex';
+  document.getElementById('opBadgeAvatar').textContent=op.nome.charAt(0).toUpperCase();
+  document.getElementById('opBadgeNome').textContent=op.nome;
+  // aplicar permissões nas tabs
+  aplicarPermissoesTabs();
+  toast(`Bem-vinda, ${op.nome}! 👋`,'verde');
+}
+
+function aplicarPermissoesTabs(){
+  if(!opAtual)return;
+  const tabMap={
+    'mesas':1,'caixa':2,'clientes':3,'historico':4,
+    'financeiro':5,'fechamento':6,'anual':6,'config':7
+  };
+  const tabs=document.querySelectorAll('.tab');
+  // admin vê tudo, operador vê só o que tem permissão
+  if(opAtual.perfil!=='admin'){
+    // esconder config se não tiver permissão
+    if(!temPermissao('config')){
+      tabs[tabs.length-1].style.display='none';
+    }
+    if(!temPermissao('financeiro')){
+      // esconder financeiro, fechamento, anual
+      tabs.forEach(t=>{ if(t.textContent.includes('Financeiro')||t.textContent.includes('Fechamento')||t.textContent.includes('Anual')) t.style.display='none'; });
+    }
+    if(!temPermissao('clientes')){
+      tabs.forEach(t=>{ if(t.textContent.includes('Clientes')) t.style.display='none'; });
+    }
+  }
+  // seção de config de operadores só para admin
+  const secOp=document.getElementById('cfgOperadoresSection');
+  if(secOp) secOp.style.display=opAtual.perfil==='admin'?'block':'none';
+}
+
+window.trocarOperador=function(){
+  if(!confirm(`Sair como ${opAtual?.nome}?`))return;
+  opAtual=null;
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('opBadge').style.display='none';
+  document.getElementById('loginOps').style.display='grid';
+  document.getElementById('loginSenhaBox').style.display='none';
+  pinBuffer=''; opSelecionado=null;
+  // restaurar todas as tabs
+  document.querySelectorAll('.tab').forEach(t=>t.style.display='');
+  renderLoginOps();
+};
+
+// ── SALVAR OPERADOR ───────────────────────────────────────────
+window.salvarOperador=async function(){
+  const nome=document.getElementById('opNome').value.trim();
+  const pin=document.getElementById('opPin').value.trim();
+  const perfil=document.getElementById('opPerfil').value;
+  if(!nome||pin.length!==4){ toast('Nome e PIN de 4 dígitos são obrigatórios','vermelho'); return; }
+  const permissoes=perfil==='admin'?PERMS_ADMIN:
+    PERMS_TODAS.filter(p=>document.getElementById('perm_'+p)?.checked);
+  setSyncDot('sync');
+  await push(ref(db,'operadores'),{nome,pin,perfil,permissoes,ativo:true,criadoEm:new Date().toISOString()});
+  setSyncDot('ok');
+  ['opNome','opPin'].forEach(id=>document.getElementById(id).value='');
+  PERMS_TODAS.forEach(p=>{ const el=document.getElementById('perm_'+p); if(el)el.checked=PERMS_OPERADOR.includes(p); });
+  toast('Operador salvo ✓','verde');
+};
+
+function renderOperadoresConfig(){
+  const el=document.getElementById('operadoresLista'); if(!el)return;
+  const lista=Object.entries(operadores).map(([k,o])=>({...o,_key:k}));
+  if(!lista.length){ el.innerHTML=''; return; }
+  el.innerHTML=lista.map(o=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--cinza-c);">
+      <div style="width:36px;height:36px;border-radius:50%;background:${o.perfil==='admin'?'var(--roxo)':'var(--cinza)'};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;">${o.nome.charAt(0).toUpperCase()}</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:.85rem;">${o.nome} <span style="font-size:.65rem;background:${o.perfil==='admin'?'var(--lilas)':'var(--cinza-c)'};color:${o.perfil==='admin'?'var(--roxo)':'var(--cinza)'};padding:1px 6px;border-radius:8px;">${o.perfil==='admin'?'Admin':'Operador'}</span></div>
+        <div style="font-size:.68rem;color:var(--cinza);">PIN: ••••  ·  ${(o.permissoes||[]).length} permissões</div>
+      </div>
+      <button onclick="deletarOperador('${o._key}')" class="btn-del-lan" title="Remover">🗑</button>
+    </div>`).join('');
+}
+
+window.deletarOperador=async function(key){
+  const op=operadores[key];
+  if(!op)return;
+  if(opAtual?._key===key){ toast('Não pode remover o operador logado','vermelho'); return; }
+  if(!confirm(`Remover operador ${op.nome}?`))return;
+  await remove(ref(db,'operadores/'+key));
+  toast('Operador removido','vermelho');
+};
+
+// ── RELATÓRIO POR OPERADOR ────────────────────────────────────
+function relatorioOperadores(inicio,fim){
+  const ls=Object.values(vendas).filter(v=>{
+    const d=v.data.split('T')[0];
+    return (!inicio||d>=inicio)&&(!fim||d<=fim);
+  });
+  const ops={};
+  ls.forEach(v=>{
+    const key=v.operadorKey||'sem_operador';
+    const nome=v.operadorNome||'Sem operador';
+    if(!ops[key]) ops[key]={nome,total:0,qtd:0,ticket:0};
+    ops[key].total+=v.total;
+    ops[key].qtd++;
+  });
+  Object.values(ops).forEach(o=>o.ticket=o.qtd?o.total/o.qtd:0);
+  return Object.values(ops).sort((a,b)=>b.total-a.total);
+}
+
+function renderRelatorioOperadores(el,inicio,fim){
+  const dados=relatorioOperadores(inicio,fim);
+  if(!dados.length){ el.innerHTML='<div style="text-align:center;color:var(--cinza);padding:20px;font-size:.8rem;">Nenhuma venda no período.</div>'; return; }
+  el.innerHTML=dados.map((o,i)=>`
+    <div class="op-rank-item">
+      <div style="width:32px;height:32px;border-radius:50%;background:${i===0?'linear-gradient(135deg,#B8860B,#FFD700)':i===1?'linear-gradient(135deg,#708090,#C0C0C0)':'var(--lilas)'};color:${i<2?'#fff':'var(--roxo-e)'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0;">${i===0?'🥇':i===1?'🥈':i+1+'°'}</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:.85rem;">${o.nome}</div>
+        <div style="font-size:.7rem;color:var(--cinza);">${o.qtd} venda(s) · Ticket médio R$ ${fmt(o.ticket)}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:.95rem;font-weight:800;color:var(--verde-e);">R$ ${fmt(o.total)}</div>
+      </div>
+    </div>`).join('');
+}
 // Sobrescreve aplicarDesconto para checar limite
 const _aplicarDescontoOrig=window.aplicarDesconto;
 window.aplicarDesconto=function(){
@@ -3580,7 +3922,10 @@ window.abrirCaixa=async function(){
     status:'aberto',
     abertura:new Date().toISOString(),
     valorAbertura:val,
-    obs, sangrias:{}
+    obs,
+    operadorKey:opAtual?._key||null,
+    operadorNome:opAtual?.nome||'',
+    sangrias:{}
   });
   setSyncDot('ok');
   toast('Caixa aberto! 🔓','verde');
@@ -3834,7 +4179,11 @@ document.getElementById('numPed').textContent=String(cfg.numPed||1).padStart(3,'
 
 // Conecta ao Firebase DEPOIS de renderizar a UI (não bloqueia)
 setTimeout(()=>{
-  try{ iniciarListeners(); iniciarListenerCampanhas(); }catch(e){ console.warn('Firebase erro:',e); }
+  try{
+    iniciarListeners();
+    iniciarListenerCampanhas();
+    iniciarListenerOperadores();
+  }catch(e){ console.warn('Firebase erro:',e); }
 }, 100);
 
 // Se Firebase demorar 5s, mostrar aviso mas app continua funcionando
