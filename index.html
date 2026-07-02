@@ -616,16 +616,32 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
   <!-- TECLADO + PESO -->
   <div class="pdv-teclado">
     <div class="card" style="padding:14px;">
+
+      <!-- TOGGLE PESO / VALOR -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+        <button id="modoGramas" onclick="setModoEntrada('g')"
+          style="padding:7px;border-radius:8px;border:2px solid var(--roxo);background:var(--roxo);color:#fff;font-weight:700;font-size:.78rem;cursor:pointer;">
+          ⚖️ Gramas
+        </button>
+        <button id="modoValor" onclick="setModoEntrada('r')"
+          style="padding:7px;border-radius:8px;border:2px solid var(--lilas);background:#fff;color:var(--cinza);font-weight:700;font-size:.78rem;cursor:pointer;">
+          💰 Valor R$
+        </button>
+      </div>
+
+      <!-- DISPLAY -->
       <div class="balanca-display" style="margin-bottom:10px;">
         <div>
-          <div style="font-size:.58rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:2px;margin-bottom:2px;">Peso</div>
+          <div style="font-size:.58rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:2px;margin-bottom:2px;" id="displayLabel">Peso</div>
           <div class="peso-value" id="pesoDisplay">0,000</div>
         </div>
         <div style="text-align:right;">
-          <div class="peso-unit">kg</div>
+          <div class="peso-unit" id="displayUnit">kg</div>
           <div id="prodSelLabel" style="font-size:.6rem;color:#C084FC;margin-top:4px;max-width:90px;text-align:right;word-break:break-word;"></div>
         </div>
       </div>
+
+      <!-- TECLADO -->
       <div class="peso-grid">
         <button class="btn-num" onclick="dg('1')">1</button>
         <button class="btn-num" onclick="dg('2')">2</button>
@@ -634,15 +650,15 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
         <button class="btn-num" onclick="dg('4')">4</button>
         <button class="btn-num" onclick="dg('5')">5</button>
         <button class="btn-num" onclick="dg('6')">6</button>
-        <button class="btn-num gz" onclick="pr(500)">500g</button>
+        <button class="btn-num gz" id="atalho1" onclick="atalhoRapido1()">500g</button>
         <button class="btn-num" onclick="dg('7')">7</button>
         <button class="btn-num" onclick="dg('8')">8</button>
         <button class="btn-num" onclick="dg('9')">9</button>
-        <button class="btn-num gz" onclick="pr(1000)">1kg</button>
+        <button class="btn-num gz" id="atalho2" onclick="atalhoRapido2()">1kg</button>
         <button class="btn-num gz" onclick="dg('0')">0</button>
         <button class="btn-num" onclick="dg('00')">00</button>
         <button class="btn-num" onclick="dg('000')">000</button>
-        <button class="btn-num gz" onclick="pr(1500)">1,5kg</button>
+        <button class="btn-num gz" id="atalho3" onclick="atalhoRapido3()">1,5kg</button>
       </div>
       <button class="btn-add-kg" onclick="addKg()" style="margin-top:10px;">➕ Adicionar ao Pedido</button>
       <div class="prod-sel-destaque" id="prodSelDestaque" style="margin-top:8px;">
@@ -1481,13 +1497,63 @@ window.dg=function(d){ if(st.dig.length>=6)return; st.dig+=d; updPeso(); };
 window.bk=function(){ st.dig=st.dig.slice(0,-1); updPeso(); };
 window.pr=function(g){ st.dig=String(g).padStart(3,'0'); updPeso(); };
 function updPeso(){
-  const kg=(parseInt(st.dig||'0',10)||0)/1000;
   const el=document.getElementById('pesoDisplay');
-  if(el) el.textContent=kg.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
+  if(!el) return;
+  if(modoEntrada==='r'){
+    // Mostra como valor R$ com 2 casas decimais
+    const centavos=parseInt(st.dig||'0',10)||0;
+    const reais=centavos/100;
+    el.textContent=reais.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  } else {
+    const kg=(parseInt(st.dig||'0',10)||0)/1000;
+    el.textContent=kg.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
+  }
 }
 function getPesoKg(){ return (parseInt(st.dig||'0',10)||0)/1000; }
 
-// ── PRODUTOS COM CATEGORIAS ──────────────────────────────────
+// ── MODO DE ENTRADA: PESO ou VALOR ───────────────────────────
+let modoEntrada = 'g'; // 'g' = gramas, 'r' = reais
+
+window.setModoEntrada=function(modo){
+  modoEntrada=modo; st.dig=''; updPeso();
+  const btnG=document.getElementById('modoGramas');
+  const btnR=document.getElementById('modoValor');
+  const label=document.getElementById('displayLabel');
+  const unit=document.getElementById('displayUnit');
+  const a1=document.getElementById('atalho1');
+  const a2=document.getElementById('atalho2');
+  const a3=document.getElementById('atalho3');
+  if(modo==='g'){
+    btnG.style.background='var(--roxo)'; btnG.style.color='#fff'; btnG.style.borderColor='var(--roxo)';
+    btnR.style.background='#fff'; btnR.style.color='var(--cinza)'; btnR.style.borderColor='var(--lilas)';
+    if(label) label.textContent='Peso';
+    if(unit) unit.textContent='kg';
+    if(a1) a1.textContent='500g';
+    if(a2) a2.textContent='1kg';
+    if(a3) a3.textContent='1,5kg';
+  } else {
+    btnR.style.background='var(--verde)'; btnR.style.color='#fff'; btnR.style.borderColor='var(--verde)';
+    btnG.style.background='#fff'; btnG.style.color='var(--cinza)'; btnG.style.borderColor='var(--lilas)';
+    if(label) label.textContent='Valor';
+    if(unit) unit.textContent='R$';
+    if(a1) a1.textContent='R$10';
+    if(a2) a2.textContent='R$20';
+    if(a3) a3.textContent='R$50';
+  }
+};
+
+window.atalhoRapido1=function(){
+  if(modoEntrada==='g') pr(500);
+  else{ st.dig='1000'; updPeso(); } // R$10,00
+};
+window.atalhoRapido2=function(){
+  if(modoEntrada==='g') pr(1000);
+  else{ st.dig='2000'; updPeso(); } // R$20,00
+};
+window.atalhoRapido3=function(){
+  if(modoEntrada==='g') pr(1500);
+  else{ st.dig='5000'; updPeso(); } // R$50,00
+};
 let catAtiva = 'todas';
 
 // Sempre retorna arrays, convertendo objeto Firebase se necessário
@@ -1594,10 +1660,20 @@ window.selProd=function(id){
 
 window.addKg=function(){
   if(!st.prodSel){ toast('Selecione um produto abaixo','vermelho'); return; }
-  const peso=getPesoKg();
-  if(peso<=0){ toast('Informe o peso','vermelho'); return; }
   const cat=getCategorias().find(c=>c.id===st.prodSel.cat);
-  st.itens.push({id:Date.now(),tipo:'kg',nome:st.prodSel.nome,emoji:st.prodSel.emoji,cat:st.prodSel.cat,peso,preco:st.prodSel.preco,subtotal:peso*st.prodSel.preco,fidelidade:cat?.fidelidade||false});
+  let peso, subtotal;
+  if(modoEntrada==='r'){
+    const centavos=parseInt(st.dig||'0',10)||0;
+    const valorDigitado=centavos/100;
+    if(valorDigitado<=0){ toast('Informe o valor em R$','vermelho'); return; }
+    peso=valorDigitado/st.prodSel.preco;
+    subtotal=valorDigitado;
+  } else {
+    peso=getPesoKg();
+    if(peso<=0){ toast('Informe o peso','vermelho'); return; }
+    subtotal=peso*st.prodSel.preco;
+  }
+  st.itens.push({id:Date.now(),tipo:'kg',nome:st.prodSel.nome,emoji:st.prodSel.emoji||'',cat:st.prodSel.cat,peso,preco:st.prodSel.preco,subtotal,fidelidade:cat?.fidelidade||false});
   st.dig=''; st.prodSel=null;
   const d=document.getElementById('prodSelDestaque'); if(d)d.classList.remove('show');
   const lbl=document.getElementById('prodSelLabel'); if(lbl)lbl.textContent='';
