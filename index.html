@@ -4040,6 +4040,8 @@ function renderCaixaAberto(el,cx){
       <button class="btn-fechar-cx" onclick="fecharCaixaClick()" style="width:100%;">🔒 Fechar Caixa</button>
     </div>`;
   window._caixaKeyAtual = cx._key;
+  // Inicializar diferença após renderizar
+  setTimeout(calcDiferencaCaixa, 50);
 }
 
 window.calcDiferencaCaixa=function(){
@@ -4082,22 +4084,67 @@ window.calcDiferencaCaixa=function(){
 };
 
 window.fecharCaixaClick=async function(){
-  const key = window._caixaKeyAtual || getCaixaAberto()?._key;
-  if(!key){ toast('Erro: caixa não identificado','vermelho'); return; }
+  // Pegar chave do caixa
+  const key = window._caixaKeyAtual;
+  if(!key){ 
+    alert('Erro: caixa não identificado. Recarregue a página.');
+    return; 
+  }
 
+  // Pegar valores dos campos
+  const g=id=>parseFloat((document.getElementById(id)||{}).value)||0;
+  const contadoDin  = g('contadoDinheiro');
+  const contadoPix  = g('contadoPix');
+  const contadoCred = g('contadoCredito');
+  const contadoDeb  = g('contadoDebito');
+  const totalContado = contadoDin+contadoPix+contadoCred+contadoDeb;
+  const obs = (document.getElementById('obsFechamento')||{}).value||'';
+
+  // Calcular totais das vendas
   const cx = getCaixaAberto();
-  if(!cx){ toast('Nenhum caixa aberto','vermelho'); return; }
-
+  if(!cx){ alert('Nenhum caixa aberto!'); return; }
   const vs = getVendasCaixa(cx);
-  const totalVendas = vs.reduce((a,v)=>a+v.total,0);
-  const totalDin = vs.reduce((a,v)=>a+(v.pagamentos?.dinheiro||(!v.pagamentos&&v.pag==='Dinheiro'?v.total:0)),0);
-  const totalPix = vs.reduce((a,v)=>a+(v.pagamentos?.pix||0),0);
-  const totalCred = vs.reduce((a,v)=>a+(v.pagamentos?.credito||0),0);
-  const totalDeb = vs.reduce((a,v)=>a+(v.pagamentos?.debito||0),0);
-  const sangriasLista = cx.sangrias ? Object.values(cx.sangrias) : [];
-  const totalSangrias = sangriasLista.reduce((a,s)=>a+s.valor,0);
+  const totalVendas  = vs.reduce((a,v)=>a+v.total,0);
+  const totalDin     = vs.reduce((a,v)=>a+(v.pagamentos?.dinheiro||(!v.pagamentos&&v.pag==='Dinheiro'?v.total:0)),0);
+  const totalPix2    = vs.reduce((a,v)=>a+(v.pagamentos?.pix||0),0);
+  const totalCred    = vs.reduce((a,v)=>a+(v.pagamentos?.credito||0),0);
+  const totalDeb     = vs.reduce((a,v)=>a+(v.pagamentos?.debito||0),0);
+  const sangrias     = cx.sangrias?Object.values(cx.sangrias):[];
+  const totalSangrias= sangrias.reduce((a,s)=>a+s.valor,0);
+  const diferenca    = totalContado - totalVendas;
 
-  await fecharCaixa(key,totalVendas,totalDin,totalPix,totalCred,totalDeb,totalSangrias);
+  // Confirmar
+  const msg = `Fechar caixa?\n\nTotal sistema: R$ ${fmt(totalVendas)}\nTotal contado: R$ ${fmt(totalContado)}\nDiferença: R$ ${fmt(diferenca)}`;
+  if(!confirm(msg)) return;
+
+  // Salvar
+  try{
+    const ini = new Date(cx.abertura);
+    const fim = new Date();
+    const vendasCx = vs;
+    const sangriasLista = sangrias;
+    const resumo = {
+      totalVendas, totalDinheiro:totalDin, totalPix:totalPix2,
+      totalCredito:totalCred, totalDebito:totalDeb,
+      contadoDinheiro:contadoDin, contadoPix, contadoCredito:contadoCred, contadoDebito:contadoDeb,
+      totalContado, totalSangrias, diferenca,
+      resultado: totalVendas - totalSangrias,
+      numVendas: vendasCx.length,
+      sangriasDetalhe: sangriasLista
+    };
+    setSyncDot('sync');
+    await update(ref(db,'caixas/'+key),{
+      status:'fechado',
+      fechamento: new Date().toISOString(),
+      totalContado, obsFechamento:obs, resumo
+    });
+    setSyncDot('ok');
+    toast('Caixa fechado! 🔒','verde');
+    renderCaixa();
+    setTimeout(()=>mostrarModalFechamentoCaixa(key,cx,resumo,obs), 500);
+  } catch(e){
+    alert('Erro ao fechar: '+e.message);
+  }
 };
 
 window.fecharCaixa=async function(key,totalVendas,totalDin,totalPix,totalCred,totalDeb,totalSangrias){
