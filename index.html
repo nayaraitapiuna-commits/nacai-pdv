@@ -4086,50 +4086,64 @@ window.calcDiferencaCaixa=function(){
 };
 
 window.fecharCaixa=async function(key,totalVendas,totalDin,totalPix,totalCred,totalDeb,totalSangrias){
-  const pegar=id=>parseFloat(document.getElementById(id)?.value)||0;
+  // Pegar valores contados dos campos
+  const pegar=id=>{
+    const el=document.getElementById(id);
+    if(!el){ console.warn('Campo não encontrado:',id); return 0; }
+    return parseFloat(el.value)||0;
+  };
   const contadoDin=pegar('contadoDinheiro');
   const contadoPix=pegar('contadoPix');
   const contadoCred=pegar('contadoCredito');
   const contadoDeb=pegar('contadoDebito');
   const totalContado=contadoDin+contadoPix+contadoCred+contadoDeb;
-  const obs=document.getElementById('obsFechamento').value.trim();
+  const obs=(document.getElementById('obsFechamento')?.value||'').trim();
   const diferenca=totalContado-totalVendas;
 
-  const cxSnap=await get(ref(db,'caixas/'+key));
-  if(!cxSnap.exists())return;
-  const cx=cxSnap.val();
-  const ini=new Date(cx.abertura);
-  const fim=new Date();
-  const vendasCx=Object.values(vendas).filter(v=>{
-    const d=new Date(v.data); return d>=ini&&d<=fim;
-  });
-  const numVendas=vendasCx.length;
-  const ticketMedio=numVendas?totalVendas/numVendas:0;
-  const vBalcao=vendasCx.filter(v=>v.tipo==='balcao').reduce((a,v)=>a+v.total,0);
-  const vMesa=vendasCx.filter(v=>v.tipo==='mesa').reduce((a,v)=>a+v.total,0);
-  const vDelivery=vendasCx.filter(v=>v.tipo==='delivery').reduce((a,v)=>a+v.total,0);
-  const vRetirada=vendasCx.filter(v=>v.tipo==='retirada').reduce((a,v)=>a+v.total,0);
-  const lancDia=Object.values(lancamentos).filter(l=>{const d=new Date(l.data);return d>=ini&&d<=fim&&l.tipo==='pagar'&&l.pago;});
-  const totalDespesas=lancDia.reduce((a,l)=>a+l.valor,0);
-  const sangriasLista=cx.sangrias?Object.values(cx.sangrias):[];
+  const btn=document.querySelector('.btn-fechar-cx');
+  if(btn){ btn.textContent='⏳ Fechando...'; btn.disabled=true; }
 
-  const resumo={
-    totalVendas, totalDinheiro:totalDin, totalPix, totalCredito:totalCred, totalDebito:totalDeb,
-    contadoDinheiro:contadoDin, contadoPix, contadoCredito:contadoCred, contadoDebito:contadoDeb,
-    totalContado, totalSangrias, diferenca,
-    resultado:totalVendas-totalSangrias,
-    numVendas, ticketMedio, vBalcao, vMesa, vDelivery, vRetirada, totalDespesas,
-    sangriasDetalhe:sangriasLista
-  };
+  try{
+    const cxSnap=await get(ref(db,'caixas/'+key));
+    if(!cxSnap.exists()){ toast('Caixa não encontrado','vermelho'); return; }
+    const cx=cxSnap.val();
+    const ini=new Date(cx.abertura);
+    const fim=new Date();
+    const vendasCx=Object.values(vendas).filter(v=>{
+      const d=new Date(v.data); return d>=ini&&d<=fim;
+    });
+    const numVendas=vendasCx.length;
+    const ticketMedio=numVendas?totalVendas/numVendas:0;
+    const vBalcao=vendasCx.filter(v=>v.tipo==='balcao').reduce((a,v)=>a+v.total,0);
+    const vMesa=vendasCx.filter(v=>v.tipo==='mesa').reduce((a,v)=>a+v.total,0);
+    const vDelivery=vendasCx.filter(v=>v.tipo==='delivery').reduce((a,v)=>a+v.total,0);
+    const vRetirada=vendasCx.filter(v=>v.tipo==='retirada').reduce((a,v)=>a+v.total,0);
+    const lancDia=Object.values(lancamentos).filter(l=>{const d=new Date(l.data);return d>=ini&&d<=fim&&l.tipo==='pagar'&&l.pago;});
+    const totalDespesas=lancDia.reduce((a,l)=>a+l.valor,0);
+    const sangriasLista=cx.sangrias?Object.values(cx.sangrias):[];
 
-  setSyncDot('sync');
-  await update(ref(db,'caixas/'+key),{
-    status:'fechado', fechamento:new Date().toISOString(),
-    totalContado, obsFechamento:obs, resumo
-  });
-  setSyncDot('ok');
-  toast('Caixa fechado! 🔒','verde');
-  setTimeout(()=>mostrarModalFechamentoCaixa(key,cx,resumo,obs),600);
+    const resumo={
+      totalVendas, totalDinheiro:totalDin, totalPix:totalPix, totalCredito:totalCred, totalDebito:totalDeb,
+      contadoDinheiro:contadoDin, contadoPix:contadoPix, contadoCredito:contadoCred, contadoDebito:contadoDeb,
+      totalContado, totalSangrias, diferenca,
+      resultado:totalVendas-totalSangrias,
+      numVendas, ticketMedio, vBalcao, vMesa, vDelivery, vRetirada, totalDespesas,
+      sangriasDetalhe:sangriasLista
+    };
+
+    setSyncDot('sync');
+    await update(ref(db,'caixas/'+key),{
+      status:'fechado', fechamento:new Date().toISOString(),
+      totalContado, obsFechamento:obs, resumo
+    });
+    setSyncDot('ok');
+    toast('Caixa fechado! 🔒','verde');
+    setTimeout(()=>mostrarModalFechamentoCaixa(key,cx,resumo,obs),600);
+  } catch(e){
+    console.error('Erro ao fechar caixa:',e);
+    toast('Erro ao fechar caixa: '+e.message,'vermelho');
+    if(btn){ btn.textContent='🔒 Fechar Caixa'; btn.disabled=false; }
+  }
 };
 
 window.abrirCaixa=async function(){
