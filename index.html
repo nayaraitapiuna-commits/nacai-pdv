@@ -4281,13 +4281,26 @@ window.fecharCaixa=async function(key,esperado,totalVendas,totalDin,totalPix,tot
 
 function gerarTextoCaixa(key,cx,r,obs){
   const ab=new Date(cx.abertura);
-  const fe=new Date();
+  const fe=cx.fechamento?new Date(cx.fechamento):new Date();
   const durMin=Math.floor((fe-ab)/60000);
   const durH=Math.floor(durMin/60);
   const durM=durMin%60;
   const durStr=durH>0?`${durH}h${durM}min`:`${durMin}min`;
-  const diffStr=r.diferenca===0?'✅ CAIXA CORRETO':r.diferenca>0?`⚠️ SOBRA R$ ${fmt(r.diferenca)}`:`🚨 FALTA R$ ${fmt(Math.abs(r.diferenca))}`;
+
+  // Diferença total
+  const diferenca = r.diferenca!==undefined ? r.diferenca : (r.totalContado||0)-(r.totalVendas||0);
+  const diffStr = Math.abs(diferenca)<0.01 ? '✅ CAIXA CORRETO'
+    : diferenca>0 ? `⚠️ SOBRA R$ ${fmt(diferenca)}`
+    : `🚨 FALTA R$ ${fmt(Math.abs(diferenca))}`;
+
   const sangrias=r.sangriasDetalhe||[];
+
+  // Conferência por forma
+  const linhaConf=(emoji,nome,sistema,contado)=>{
+    const diff=(contado||sistema)-sistema;
+    const status=Math.abs(diff)<0.01?'✅':diff>0?'⚠️ sobra':'🚨 falta';
+    return `  ${emoji} ${nome.padEnd(10)} Sistema: R$ ${fmt(sistema).padStart(8)} | Contado: R$ ${fmt(contado||sistema).padStart(8)} ${Math.abs(diff)>=0.01?`| ${status} R$ ${fmt(Math.abs(diff))}`:'| ✅ OK'}`;
+  };
 
   return `╔══════════════════════════════╗
 ║    FECHAMENTO DE CAIXA       ║
@@ -4297,46 +4310,41 @@ Data:       ${ab.toLocaleDateString('pt-BR')}
 Abertura:   ${ab.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
 Fechamento: ${fe.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
 Duração:    ${durStr}
+Operador:   ${cx.operadorNome||'—'}
 ──────────────────────────────
 RESUMO DE VENDAS
 ──────────────────────────────
-Total de pedidos:  ${r.numVendas}
-Ticket médio:      R$ ${fmt(r.ticketMedio)}
-Total vendido:     R$ ${fmt(r.totalVendas)}
+Total de pedidos:  ${r.numVendas||0}
+Ticket médio:      R$ ${fmt(r.ticketMedio||0)}
+Total vendido:     R$ ${fmt(r.totalVendas||0)}
 
 Por canal:
-  🏪 Balcão:    R$ ${fmt(r.vBalcao)}
-  🪑 Mesas:     R$ ${fmt(r.vMesa)}
-  🛵 Delivery:  R$ ${fmt(r.vDelivery)}
-  📦 Retirada:  R$ ${fmt(r.vRetirada)}
+  🏪 Balcão:    R$ ${fmt(r.vBalcao||0)}
+  🪑 Mesas:     R$ ${fmt(r.vMesa||0)}
+  🛵 Delivery:  R$ ${fmt(r.vDelivery||0)}
+  📦 Retirada:  R$ ${fmt(r.vRetirada||0)}
 ──────────────────────────────
-FORMAS DE PAGAMENTO
+CONFERÊNCIA POR FORMA
 ──────────────────────────────
-  💵 Dinheiro:  R$ ${fmt(r.totalDinheiro)}
-  📱 PIX:       R$ ${fmt(r.totalPix)}
-  💳 Crédito:   R$ ${fmt(r.totalCredito)}
-  💳 Débito:    R$ ${fmt(r.totalDebito)}
+${linhaConf('💵','Dinheiro', r.totalDinheiro||0, r.contadoDinheiro)}
+${linhaConf('📱','PIX',      r.totalPix||0,       r.contadoPix)}
+${linhaConf('💳','Crédito',  r.totalCredito||0,   r.contadoCredito)}
+${linhaConf('💳','Débito',   r.totalDebito||0,    r.contadoDebito)}
 ──────────────────────────────
-SAÍDAS E SANGRIAS
-──────────────────────────────${sangrias.length?'\n'+sangrias.map(s=>`  ${new Date(s.data).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} - ${s.desc||'Sangria'}: R$ ${fmt(s.valor)}`).join('\n'):'\n  Nenhuma sangria'}
-Total sangrias:    R$ ${fmt(r.totalSangrias)}
-Despesas do dia:   R$ ${fmt(r.totalDespesas||0)}
-──────────────────────────────
-CONFERÊNCIA DE CAIXA
-──────────────────────────────
-Abertura (troco):  R$ ${fmt(cx.valorAbertura)}
-+ Entradas dinheiro R$ ${fmt(r.totalDinheiro)}
-- Sangrias:        R$ ${fmt(r.totalSangrias)}
-= Esperado:        R$ ${fmt(r.esperado)}
-Contado fisicamente R$ ${fmt(r.contado)}
+  Total sistema:   R$ ${fmt(r.totalVendas||0)}
+  Total contado:   R$ ${fmt(r.totalContado||r.totalVendas||0)}
 ──────────────────────────────
 ${diffStr}
 ──────────────────────────────
+SAÍDAS E SANGRIAS
+──────────────────────────────${sangrias.length?'\n'+sangrias.map(s=>`  ${new Date(s.data).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} - ${s.desc||'Sangria'}: R$ ${fmt(s.valor)}`).join('\n'):'\n  Nenhuma sangria'}
+Total sangrias:    R$ ${fmt(r.totalSangrias||0)}
+──────────────────────────────
 RESULTADO DO DIA
 ──────────────────────────────
-Receitas:          R$ ${fmt(r.totalVendas)}
-Despesas (sang.):  R$ ${fmt(r.totalSangrias)}
-Lucro estimado:    R$ ${fmt(r.totalVendas-r.totalSangrias-(r.totalDespesas||0))}
+Receitas:          R$ ${fmt(r.totalVendas||0)}
+Despesas (sang.):  R$ ${fmt(r.totalSangrias||0)}
+Lucro estimado:    R$ ${fmt((r.totalVendas||0)-(r.totalSangrias||0)-(r.totalDespesas||0))}
 ${obs?`\nObs: ${obs}`:''}
 ══════════════════════════════
   Gerado por Naçaí PDV
@@ -4351,10 +4359,27 @@ function mostrarModalFechamentoCaixa(key,cx,r,obs){
   const div=document.createElement('div');
   div.id='modalCaixa';
   div.className='modal-ov show';
-  const diffCor=r.diferenca===0?'var(--verde-e)':r.diferenca>0?'var(--amarelo)':'var(--vermelho)';
-  const diffIcon=r.diferenca===0?'✅':r.diferenca>0?'⚠️':'🚨';
+  const diferenca = r.diferenca!==undefined ? r.diferenca : (r.totalContado||0)-(r.totalVendas||0);
+  const diffCor=Math.abs(diferenca)<0.01?'var(--verde-e)':diferenca>0?'var(--amarelo)':'var(--vermelho)';
+  const diffIcon=Math.abs(diferenca)<0.01?'✅':diferenca>0?'⚠️':'🚨';
+  const diffLabel=Math.abs(diferenca)<0.01?'Caixa correto':diferenca>0?'Sobra':'Falta';
+
+  const linhaConf=(emoji,nome,sistema,contado)=>{
+    if(sistema===undefined) return '';
+    const c=contado!==undefined?contado:sistema;
+    const d=c-sistema;
+    const cor=Math.abs(d)<0.01?'var(--verde-e)':d>0?'var(--amarelo)':'var(--vermelho)';
+    const status=Math.abs(d)<0.01?'✅':(d>0?`⚠️ +R$${fmt(d)}`:`🚨 -R$${fmt(Math.abs(d))}`);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--cinza-c);">
+      <span style="font-size:.8rem;">${emoji} ${nome}</span>
+      <span style="font-size:.78rem;color:var(--cinza);">Sistema: R$${fmt(sistema)}</span>
+      <span style="font-size:.78rem;color:var(--cinza);">Contado: R$${fmt(c)}</span>
+      <span style="font-size:.75rem;font-weight:700;color:${cor};">${status}</span>
+    </div>`;
+  };
+
   div.innerHTML=`
-  <div class="modal" style="max-width:480px;max-height:90vh;overflow-y:auto;">
+  <div class="modal" style="max-width:520px;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div style="font-size:1rem;font-weight:800;">🔒 Caixa Fechado</div>
       <button onclick="document.getElementById('modalCaixa').remove()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--cinza);">✕</button>
@@ -4363,23 +4388,27 @@ function mostrarModalFechamentoCaixa(key,cx,r,obs){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
       <div style="background:var(--creme);border-radius:9px;padding:12px;text-align:center;">
         <div style="font-size:.65rem;color:var(--cinza);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Total Vendido</div>
-        <div style="font-size:1.4rem;font-weight:800;color:var(--verde-e);margin-top:4px;">R$ ${fmt(r.totalVendas)}</div>
-        <div style="font-size:.68rem;color:var(--cinza);">${r.numVendas} pedido(s)</div>
+        <div style="font-size:1.4rem;font-weight:800;color:var(--verde-e);margin-top:4px;">R$ ${fmt(r.totalVendas||0)}</div>
+        <div style="font-size:.68rem;color:var(--cinza);">${r.numVendas||0} pedido(s)</div>
       </div>
       <div style="background:var(--creme);border-radius:9px;padding:12px;text-align:center;border:2px solid ${diffCor};">
-        <div style="font-size:.65rem;color:var(--cinza);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Conferência</div>
-        <div style="font-size:1.3rem;font-weight:800;color:${diffCor};margin-top:4px;">${diffIcon} R$ ${fmt(Math.abs(r.diferenca))}</div>
-        <div style="font-size:.68rem;color:${diffCor};font-weight:700;">${r.diferenca===0?'Caixa correto':r.diferenca>0?'Sobra':'Falta'}</div>
+        <div style="font-size:.65rem;color:var(--cinza);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Conferência Geral</div>
+        <div style="font-size:1.3rem;font-weight:800;color:${diffCor};margin-top:4px;">${diffIcon} R$ ${fmt(Math.abs(diferenca))}</div>
+        <div style="font-size:.68rem;color:${diffCor};font-weight:700;">${diffLabel}</div>
       </div>
     </div>
-    <!-- FORMAS DE PAGAMENTO -->
+    <!-- CONFERÊNCIA POR FORMA -->
     <div style="background:var(--creme);border-radius:9px;padding:12px;margin-bottom:12px;">
-      <div style="font-size:.68rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">💳 Formas de pagamento</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-        <div style="font-size:.8rem;">💵 Dinheiro <strong>R$ ${fmt(r.totalDinheiro)}</strong></div>
-        <div style="font-size:.8rem;">📱 PIX <strong>R$ ${fmt(r.totalPix)}</strong></div>
-        <div style="font-size:.8rem;">💳 Crédito <strong>R$ ${fmt(r.totalCredito)}</strong></div>
-        <div style="font-size:.8rem;">💳 Débito <strong>R$ ${fmt(r.totalDebito)}</strong></div>
+      <div style="font-size:.68rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">💳 Conferência por forma de pagamento</div>
+      ${linhaConf('💵','Dinheiro', r.totalDinheiro||0, r.contadoDinheiro)}
+      ${linhaConf('📱','PIX',      r.totalPix||0,       r.contadoPix)}
+      ${linhaConf('💳','Crédito',  r.totalCredito||0,   r.contadoCredito)}
+      ${linhaConf('💳','Débito',   r.totalDebito||0,    r.contadoDebito)}
+      <div style="display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1.5px solid var(--cinza-c);font-weight:800;font-size:.82rem;">
+        <span>TOTAL</span>
+        <span>Sistema: R$ ${fmt(r.totalVendas||0)}</span>
+        <span>Contado: R$ ${fmt(r.totalContado||r.totalVendas||0)}</span>
+        <span style="color:${diffCor};">${diffIcon} R$ ${fmt(Math.abs(diferenca))}</span>
       </div>
     </div>
     <!-- TEXTO COMPLETO -->
