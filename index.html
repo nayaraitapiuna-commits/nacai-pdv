@@ -3970,51 +3970,46 @@ function renderCaixaAberto(el,cx){
       <div style="font-size:.72rem;color:var(--cinza);margin-bottom:14px;">Informe o valor contado fisicamente em cada forma de pagamento.</div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-
-        <!-- DINHEIRO -->
         <div style="background:var(--creme);border-radius:10px;padding:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="display:-webkit-flex;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:.75rem;font-weight:700;">💵 Dinheiro</span>
             <span style="font-size:.68rem;color:var(--cinza);">Sistema: R$ ${fmt(totalDinheiro)}</span>
           </div>
-          <input type="number" class="fi" id="contadoDinheiro" placeholder="0,00" step="0.01"
-            value="${fmt(totalDinheiro).replace(',','.')}"
+          <input type="number" class="fi" id="contadoDinheiro" placeholder="0.00" step="0.01"
+            value="${totalDinheiro.toFixed(2)}"
             oninput="calcDiferencaCaixa()" style="font-size:.9rem;font-weight:700;">
           <div id="diffDinheiro" style="font-size:.7rem;margin-top:4px;font-weight:700;min-height:18px;"></div>
         </div>
 
-        <!-- PIX -->
         <div style="background:var(--creme);border-radius:10px;padding:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="display:-webkit-flex;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:.75rem;font-weight:700;">📱 PIX</span>
             <span style="font-size:.68rem;color:var(--cinza);">Sistema: R$ ${fmt(totalPix)}</span>
           </div>
-          <input type="number" class="fi" id="contadoPix" placeholder="0,00" step="0.01"
-            value="${fmt(totalPix).replace(',','.')}"
+          <input type="number" class="fi" id="contadoPix" placeholder="0.00" step="0.01"
+            value="${totalPix.toFixed(2)}"
             oninput="calcDiferencaCaixa()" style="font-size:.9rem;font-weight:700;">
           <div id="diffPix" style="font-size:.7rem;margin-top:4px;font-weight:700;min-height:18px;"></div>
         </div>
 
-        <!-- CRÉDITO -->
         <div style="background:var(--creme);border-radius:10px;padding:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="display:-webkit-flex;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:.75rem;font-weight:700;">💳 Crédito</span>
             <span style="font-size:.68rem;color:var(--cinza);">Sistema: R$ ${fmt(totalCredito)}</span>
           </div>
-          <input type="number" class="fi" id="contadoCredito" placeholder="0,00" step="0.01"
-            value="${fmt(totalCredito).replace(',','.')}"
+          <input type="number" class="fi" id="contadoCredito" placeholder="0.00" step="0.01"
+            value="${totalCredito.toFixed(2)}"
             oninput="calcDiferencaCaixa()" style="font-size:.9rem;font-weight:700;">
           <div id="diffCredito" style="font-size:.7rem;margin-top:4px;font-weight:700;min-height:18px;"></div>
         </div>
 
-        <!-- DÉBITO -->
         <div style="background:var(--creme);border-radius:10px;padding:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="display:-webkit-flex;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:.75rem;font-weight:700;">💳 Débito</span>
             <span style="font-size:.68rem;color:var(--cinza);">Sistema: R$ ${fmt(totalDebito)}</span>
           </div>
-          <input type="number" class="fi" id="contadoDebito" placeholder="0,00" step="0.01"
-            value="${fmt(totalDebito).replace(',','.')}"
+          <input type="number" class="fi" id="contadoDebito" placeholder="0.00" step="0.01"
+            value="${totalDebito.toFixed(2)}"
             oninput="calcDiferencaCaixa()" style="font-size:.9rem;font-weight:700;">
           <div id="diffDebito" style="font-size:.7rem;margin-top:4px;font-weight:700;min-height:18px;"></div>
         </div>
@@ -4022,7 +4017,7 @@ function renderCaixaAberto(el,cx){
 
       <!-- RESULTADO FINAL -->
       <div id="resultadoConferencia" data-total="${totalVendas}" style="background:var(--acai);border-radius:10px;padding:12px 16px;margin-bottom:14px;color:#fff;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:-webkit-flex;display:flex;justify-content:space-between;align-items:center;">
           <div>
             <div style="font-size:.65rem;opacity:.6;text-transform:uppercase;letter-spacing:1px;">Total Sistema</div>
             <div style="font-size:1.1rem;font-weight:800;">R$ ${fmt(totalVendas)}</div>
@@ -4042,7 +4037,7 @@ function renderCaixaAberto(el,cx){
         <label>Observação do fechamento</label>
         <input type="text" class="fi" id="obsFechamento" placeholder="Opcional...">
       </div>
-      <button class="btn-fechar-cx" onclick="fecharCaixaClick()">🔒 Fechar Caixa</button>
+      <button class="btn-fechar-cx" onclick="fecharCaixaClick()" style="width:100%;">🔒 Fechar Caixa</button>
     </div>`;
   window._caixaKeyAtual = cx._key;
 }
