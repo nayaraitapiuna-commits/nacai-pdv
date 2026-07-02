@@ -4042,8 +4042,9 @@ function renderCaixaAberto(el,cx){
         <label>Observação do fechamento</label>
         <input type="text" class="fi" id="obsFechamento" placeholder="Opcional...">
       </div>
-      <button class="btn-fechar-cx" id="btnFecharCaixa" data-key="${cx._key}" onclick="fecharCaixaClick()">🔒 Fechar Caixa</button>
+      <button class="btn-fechar-cx" onclick="fecharCaixaClick()">🔒 Fechar Caixa</button>
     </div>`;
+  window._caixaKeyAtual = cx._key;
 }
 
 window.calcDiferencaCaixa=function(){
@@ -4086,28 +4087,21 @@ window.calcDiferencaCaixa=function(){
 };
 
 window.fecharCaixaClick=async function(){
-  console.log('fecharCaixaClick chamado');
-  const btn=document.getElementById('btnFecharCaixa');
-  console.log('btn:', btn);
-  const key=btn?.dataset?.key;
-  console.log('key:', key);
-  if(!key){ toast('Erro: chave do caixa não encontrada','vermelho'); return; }
+  const key = window._caixaKeyAtual || getCaixaAberto()?._key;
+  if(!key){ toast('Erro: caixa não identificado','vermelho'); return; }
 
-  const cx=getCaixaAberto();
-  console.log('cx:', cx);
+  const cx = getCaixaAberto();
   if(!cx){ toast('Nenhum caixa aberto','vermelho'); return; }
 
-  const vs=getVendasCaixa(cx);
-  console.log('vendas:', vs.length);
-  const totalVendas=vs.reduce((a,v)=>a+v.total,0);
-  const totalDin=vs.reduce((a,v)=>a+(v.pagamentos?.dinheiro||(!v.pagamentos&&v.pag==='Dinheiro'?v.total:0)),0);
-  const totalPix=vs.reduce((a,v)=>a+(v.pagamentos?.pix||0),0);
-  const totalCred=vs.reduce((a,v)=>a+(v.pagamentos?.credito||0),0);
-  const totalDeb=vs.reduce((a,v)=>a+(v.pagamentos?.debito||0),0);
-  const sangriasLista=cx.sangrias?Object.values(cx.sangrias):[];
-  const totalSangrias=sangriasLista.reduce((a,s)=>a+s.valor,0);
+  const vs = getVendasCaixa(cx);
+  const totalVendas = vs.reduce((a,v)=>a+v.total,0);
+  const totalDin = vs.reduce((a,v)=>a+(v.pagamentos?.dinheiro||(!v.pagamentos&&v.pag==='Dinheiro'?v.total:0)),0);
+  const totalPix = vs.reduce((a,v)=>a+(v.pagamentos?.pix||0),0);
+  const totalCred = vs.reduce((a,v)=>a+(v.pagamentos?.credito||0),0);
+  const totalDeb = vs.reduce((a,v)=>a+(v.pagamentos?.debito||0),0);
+  const sangriasLista = cx.sangrias ? Object.values(cx.sangrias) : [];
+  const totalSangrias = sangriasLista.reduce((a,s)=>a+s.valor,0);
 
-  console.log('totais:', {totalVendas,totalDin,totalPix,totalCred,totalDeb,totalSangrias});
   await fecharCaixa(key,totalVendas,totalDin,totalPix,totalCred,totalDeb,totalSangrias);
 };
 
