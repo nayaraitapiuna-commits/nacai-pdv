@@ -4042,7 +4042,7 @@ function renderCaixaAberto(el,cx){
         <label>Observação do fechamento</label>
         <input type="text" class="fi" id="obsFechamento" placeholder="Opcional...">
       </div>
-      <button class="btn-fechar-cx" onclick="fecharCaixa('${cx._key}',${totalVendas},${totalDinheiro},${totalPix},${totalCredito},${totalDebito},${totalSangrias})">🔒 Fechar Caixa</button>
+      <button class="btn-fechar-cx" id="btnFecharCaixa" data-key="${cx._key}" onclick="fecharCaixaClick()">🔒 Fechar Caixa</button>
     </div>`;
 }
 
@@ -4083,6 +4083,28 @@ window.calcDiferencaCaixa=function(){
     else if(diff>0){ elDiff.textContent=`⚠️ +R$ ${fmt(diff)}`; elDiff.style.color='#FCD34D'; }
     else { elDiff.textContent=`🚨 -R$ ${fmt(Math.abs(diff))}`; elDiff.style.color='#F87171'; }
   }
+};
+
+window.fecharCaixaClick=async function(){
+  const btn=document.getElementById('btnFecharCaixa');
+  const key=btn?.dataset?.key;
+  if(!key){ toast('Erro: chave do caixa não encontrada','vermelho'); return; }
+
+  // Pegar caixa atual
+  const cx=getCaixaAberto();
+  if(!cx){ toast('Nenhum caixa aberto','vermelho'); return; }
+
+  // Calcular totais das vendas do período
+  const vs=getVendasCaixa(cx);
+  const totalVendas=vs.reduce((a,v)=>a+v.total,0);
+  const totalDin=vs.reduce((a,v)=>a+(v.pagamentos?.dinheiro||(!v.pagamentos&&v.pag==='Dinheiro'?v.total:0)),0);
+  const totalPix=vs.reduce((a,v)=>a+(v.pagamentos?.pix||0),0);
+  const totalCred=vs.reduce((a,v)=>a+(v.pagamentos?.credito||0),0);
+  const totalDeb=vs.reduce((a,v)=>a+(v.pagamentos?.debito||0),0);
+  const sangriasLista=cx.sangrias?Object.values(cx.sangrias):[];
+  const totalSangrias=sangriasLista.reduce((a,s)=>a+s.valor,0);
+
+  await fecharCaixa(key,totalVendas,totalDin,totalPix,totalCred,totalDeb,totalSangrias);
 };
 
 window.fecharCaixa=async function(key,totalVendas,totalDin,totalPix,totalCred,totalDeb,totalSangrias){
