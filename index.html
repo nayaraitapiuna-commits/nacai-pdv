@@ -4086,16 +4086,19 @@ window.calcDiferencaCaixa=function(){
 };
 
 window.fecharCaixaClick=async function(){
+  console.log('fecharCaixaClick chamado');
   const btn=document.getElementById('btnFecharCaixa');
+  console.log('btn:', btn);
   const key=btn?.dataset?.key;
+  console.log('key:', key);
   if(!key){ toast('Erro: chave do caixa não encontrada','vermelho'); return; }
 
-  // Pegar caixa atual
   const cx=getCaixaAberto();
+  console.log('cx:', cx);
   if(!cx){ toast('Nenhum caixa aberto','vermelho'); return; }
 
-  // Calcular totais das vendas do período
   const vs=getVendasCaixa(cx);
+  console.log('vendas:', vs.length);
   const totalVendas=vs.reduce((a,v)=>a+v.total,0);
   const totalDin=vs.reduce((a,v)=>a+(v.pagamentos?.dinheiro||(!v.pagamentos&&v.pag==='Dinheiro'?v.total:0)),0);
   const totalPix=vs.reduce((a,v)=>a+(v.pagamentos?.pix||0),0);
@@ -4104,6 +4107,7 @@ window.fecharCaixaClick=async function(){
   const sangriasLista=cx.sangrias?Object.values(cx.sangrias):[];
   const totalSangrias=sangriasLista.reduce((a,s)=>a+s.valor,0);
 
+  console.log('totais:', {totalVendas,totalDin,totalPix,totalCred,totalDeb,totalSangrias});
   await fecharCaixa(key,totalVendas,totalDin,totalPix,totalCred,totalDeb,totalSangrias);
 };
 
