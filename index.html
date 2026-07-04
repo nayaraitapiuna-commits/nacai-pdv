@@ -1128,12 +1128,37 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 
 <!-- ====== FECHAMENTO ====== -->
 <div id="tab-fechamento" class="page">
-  <div class="meses-nav">
-    <button class="btn-mes" onclick="navMes(-1)">◀ Anterior</button>
-    <div class="mes-label" id="mesLabel"></div>
-    <button class="btn-mes" onclick="navMes(1)">Próximo ▶</button>
+  <!-- TABS INTERNAS -->
+  <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">
+    <button class="f-btn active" id="fechTabMes" onclick="setFechTab('mensal',this)">📅 Fechamento Mensal</button>
+    <button class="f-btn" id="fechTabCaixas" onclick="setFechTab('caixas',this)">🏦 Auditoria de Caixas</button>
   </div>
-  <div id="fechConteudo"></div>
+
+  <!-- FECHAMENTO MENSAL -->
+  <div id="fechSecMensal">
+    <div class="meses-nav">
+      <button class="btn-mes" onclick="navMes(-1)">◀ Anterior</button>
+      <div class="mes-label" id="mesLabel"></div>
+      <button class="btn-mes" onclick="navMes(1)">Próximo ▶</button>
+    </div>
+    <div id="fechConteudo"></div>
+  </div>
+
+  <!-- AUDITORIA DE CAIXAS -->
+  <div id="fechSecCaixas" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+      <div style="font-size:.85rem;font-weight:800;color:var(--acai);">🏦 Histórico de Caixas</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input type="date" id="auditDataInicio" class="fi" style="width:auto;padding:6px 10px;" onchange="renderAuditoria()">
+        <span style="font-size:.78rem;color:var(--cinza);">até</span>
+        <input type="date" id="auditDataFim" class="fi" style="width:auto;padding:6px 10px;" onchange="renderAuditoria()">
+        <select id="auditOperador" class="fi" style="width:auto;padding:6px 10px;" onchange="renderAuditoria()">
+          <option value="">Todos os operadores</option>
+        </select>
+      </div>
+    </div>
+    <div id="auditLista"></div>
+  </div>
 </div>
 
 <!-- ====== ANUAL ====== -->
@@ -1487,7 +1512,10 @@ window.irTab=function(nome,el){
   if(nome==='caixa') renderCaixa();
   if(nome==='historico') renderHist('todos');
   if(nome==='financeiro'){ filtFin('todos',document.querySelector('#tab-financeiro .f-btn')); renderFinResumo(); }
-  if(nome==='fechamento') renderFechamento();
+  if(nome==='fechamento'){
+    setFechTab('mensal',document.getElementById('fechTabMes'));
+    renderFechamento();
+  }
   if(nome==='anual') initAnual();
   if(nome==='config') renderCfg();
 };
@@ -1910,6 +1938,10 @@ window.filt=function(f,btn){
 };
 function renderHist(f){
   let vs=Object.entries(vendas).map(([k,v])=>({...v,_key:k})).sort((a,b)=>new Date(b.data)-new Date(a.data));
+  // Operador comum só vê suas próprias vendas
+  if(opAtual && opAtual.perfil!=='admin'){
+    vs=vs.filter(v=>v.operadorKey===opAtual._key||v.operadorNome===opAtual.nome);
+  }
   const hoje=new Date().toDateString();
   if(f==='hoje') vs=vs.filter(v=>new Date(v.data).toDateString()===hoje);
   else if(f==='semana'){ const d7=new Date(); d7.setDate(d7.getDate()-7); vs=vs.filter(v=>new Date(v.data)>=d7); }
@@ -2047,7 +2079,160 @@ function renderFinResumo(){
     <div class="res-card s"><div class="res-lbl">Saldo Líquido</div><div class="res-val">R$ ${fmt(saldo)}</div><div class="res-sub">${saldo>=0?'Positivo ✓':'Atenção ⚠️'}</div></div>`;
 }
 
-// ── FECHAMENTO MENSAL ─────────────────────────────────────────
+// ── TABS FECHAMENTO ───────────────────────────────────────────
+window.setFechTab=function(tab,btn){
+  document.querySelectorAll('#tab-fechamento .f-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('fechSecMensal').style.display=tab==='mensal'?'block':'none';
+  document.getElementById('fechSecCaixas').style.display=tab==='caixas'?'block':'none';
+  if(tab==='caixas') renderAuditoria();
+};
+
+// ── AUDITORIA DE CAIXAS ───────────────────────────────────────
+function renderAuditoria(){
+  const el=document.getElementById('auditLista'); if(!el)return;
+
+  // Preencher select de operadores
+  const selOp=document.getElementById('auditOperador');
+  if(selOp && selOp.options.length<=1){
+    Object.values(operadores).forEach(op=>{
+      const opt=document.createElement('option');
+      opt.value=op.nome; opt.textContent=op.nome;
+      selOp.appendChild(opt);
+    });
+  }
+
+  const dataIni=document.getElementById('auditDataInicio')?.value;
+  const dataFim=document.getElementById('auditDataFim')?.value;
+  const opFiltro=document.getElementById('auditOperador')?.value;
+
+  let lista=Object.entries(caixas)
+    .map(([k,c])=>({...c,_key:k}))
+    .sort((a,b)=>new Date(b.abertura)-new Date(a.abertura));
+
+  // Filtros
+  if(dataIni) lista=lista.filter(c=>new Date(c.abertura)>=new Date(dataIni));
+  if(dataFim) lista=lista.filter(c=>new Date(c.abertura)<=new Date(dataFim+'T23:59:59'));
+  if(opFiltro) lista=lista.filter(c=>c.operadorNome===opFiltro||c.operadorKey===opFiltro);
+
+  if(!lista.length){
+    el.innerHTML='<div style="text-align:center;color:var(--cinza);padding:40px;">Nenhum caixa encontrado.</div>';
+    return;
+  }
+
+  // Totais gerais
+  const totalGeral=lista.filter(c=>c.resumo).reduce((a,c)=>a+c.resumo.totalVendas,0);
+  const totalErros=lista.filter(c=>c.resumo&&Math.abs(c.resumo.diferenca||0)>0.01).length;
+
+  el.innerHTML=`
+    <!-- RESUMO GERAL -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;">
+      <div style="background:#fff;border-radius:10px;padding:12px;box-shadow:var(--sombra);text-align:center;">
+        <div style="font-size:.65rem;color:var(--cinza);text-transform:uppercase;font-weight:700;letter-spacing:1px;">Total de Caixas</div>
+        <div style="font-size:1.4rem;font-weight:800;color:var(--roxo);">${lista.length}</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;box-shadow:var(--sombra);text-align:center;">
+        <div style="font-size:.65rem;color:var(--cinza);text-transform:uppercase;font-weight:700;letter-spacing:1px;">Total Vendido</div>
+        <div style="font-size:1.4rem;font-weight:800;color:var(--verde-e);">R$ ${fmt(totalGeral)}</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:12px;box-shadow:var(--sombra);text-align:center;border:${totalErros>0?'2px solid var(--vermelho)':'none'}">
+        <div style="font-size:.65rem;color:var(--cinza);text-transform:uppercase;font-weight:700;letter-spacing:1px;">Com Diferença</div>
+        <div style="font-size:1.4rem;font-weight:800;color:${totalErros>0?'var(--vermelho)':'var(--verde-e)'};">${totalErros}</div>
+      </div>
+    </div>
+
+    <!-- LISTA DE CAIXAS -->
+    ${lista.map(c=>{
+      const ab=new Date(c.abertura);
+      const fe=c.fechamento?new Date(c.fechamento):null;
+      const r=c.resumo||{};
+      const diferenca=r.diferenca!==undefined?r.diferenca:(r.totalContado||0)-(r.totalVendas||0);
+      const temErro=Math.abs(diferenca||0)>0.01;
+      const diffCor=temErro?(diferenca>0?'var(--amarelo)':'var(--vermelho)'):'var(--verde-e)';
+      const diffIcon=temErro?(diferenca>0?'⚠️':'🚨'):'✅';
+
+      // Vendas deste caixa
+      const vendasCx=Object.values(vendas).filter(v=>{
+        const d=new Date(v.data);
+        return d>=ab&&(!fe||d<=fe)&&((!c.operadorKey)||v.operadorKey===c.operadorKey||v.operadorNome===c.operadorNome);
+      });
+      const vendasPorHora={};
+      vendasCx.forEach(v=>{
+        const h=new Date(v.data).getHours();
+        vendasPorHora[h]=(vendasPorHora[h]||0)+v.total;
+      });
+
+      return `<div style="background:#fff;border-radius:12px;padding:16px;box-shadow:var(--sombra);margin-bottom:12px;border-left:4px solid ${c.status==='aberto'?'var(--verde)':temErro?'var(--vermelho)':'var(--roxo)'};">
+        <!-- HEADER -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <div>
+            <div style="font-size:.88rem;font-weight:800;">
+              ${ab.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'})} · 
+              ${ab.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+              ${fe?' → '+fe.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):''}
+            </div>
+            <div style="font-size:.72rem;color:var(--cinza);margin-top:2px;">
+              👤 ${c.operadorNome||'—'} · 
+              ${vendasCx.length} venda(s) · 
+              <span style="background:${c.status==='aberto'?'#E8F8F0':'#F0E8FF'};color:${c.status==='aberto'?'var(--verde-e)':'var(--roxo)'};padding:1px 7px;border-radius:8px;font-weight:700;">${c.status==='aberto'?'Aberto':'Fechado'}</span>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:1.1rem;font-weight:800;color:var(--verde-e);">R$ ${fmt(r.totalVendas||0)}</div>
+            <div style="font-size:.72rem;color:${diffCor};font-weight:700;">${diffIcon} ${temErro?(diferenca>0?'Sobra':'Falta')+' R$ '+fmt(Math.abs(diferenca)):'Conferência OK'}</div>
+          </div>
+        </div>
+
+        <!-- FORMAS DE PAGAMENTO + CONFERÊNCIA -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:10px;">
+          ${[
+            ['💵','Dinheiro',r.totalDinheiro,r.contadoDinheiro],
+            ['📱','PIX',r.totalPix,r.contadoPix],
+            ['💳','Crédito',r.totalCredito,r.contadoCredito],
+            ['💳','Débito',r.totalDebito,r.contadoDebito]
+          ].filter(([,,s])=>s>0).map(([ico,nome,sistema,contado])=>{
+            const d=(contado!==undefined?contado:sistema)-sistema;
+            const cor=Math.abs(d)<0.01?'var(--verde-e)':d>0?'var(--amarelo)':'var(--vermelho)';
+            const status=Math.abs(d)<0.01?'✅':(d>0?`⚠️+${fmt(d)}`:`🚨-${fmt(Math.abs(d))}`);
+            return `<div style="background:var(--creme);border-radius:8px;padding:8px;${Math.abs(d)>0.01?'border:1.5px solid '+cor:''}" >
+              <div style="font-size:.65rem;color:var(--cinza);font-weight:700;">${ico} ${nome}</div>
+              <div style="font-size:.82rem;font-weight:700;">R$ ${fmt(sistema)}</div>
+              ${contado!==undefined?`<div style="font-size:.68rem;color:${cor};font-weight:700;">${status} contado: R$ ${fmt(contado)}</div>`:''}
+            </div>`;
+          }).join('')}
+        </div>
+
+        <!-- VENDAS POR DIA (resumo) -->
+        ${vendasCx.length>0?`
+        <details>
+          <summary style="cursor:pointer;font-size:.75rem;font-weight:700;color:var(--roxo);padding:4px 0;">
+            📋 Ver ${vendasCx.length} venda(s) deste caixa
+          </summary>
+          <div style="margin-top:8px;max-height:200px;overflow-y:auto;">
+            ${vendasCx.map(v=>`
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--cinza-c);font-size:.78rem;">
+                <div>
+                  <span style="font-weight:700;">#${String(v.numero).padStart(3,'0')}</span>
+                  <span style="color:var(--cinza);margin-left:6px;">${new Date(v.data).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>
+                  <span style="margin-left:6px;">${v.cliente||'—'}</span>
+                </div>
+                <div style="font-weight:700;color:var(--verde-e);">R$ ${fmt(v.total)}</div>
+              </div>`).join('')}
+          </div>
+        </details>`:''}
+
+        ${c.status==='fechado'?`
+        <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end;">
+          <button onclick="reabrirRelatorio('${c._key}')" style="background:var(--lilas);border:none;color:var(--roxo-e);padding:6px 12px;border-radius:7px;font-size:.72rem;font-weight:700;cursor:pointer;">📄 Ver Relatório</button>
+        </div>`:''}
+      </div>`;
+    }).join('')}`;
+}
+
+window.reabrirRelatorio=function(key){
+  const c=caixas[key]; if(!c||!c.resumo)return;
+  mostrarModalFechamentoCaixa(key,c,c.resumo,c.obsFechamento||'');
+};
 window.navMes=function(d){ mesFech+=d; if(mesFech>11){mesFech=0;anoFech++;}if(mesFech<0){mesFech=11;anoFech--;} renderFechamento(); };
 function renderFechamento(){
   document.getElementById('mesLabel').textContent=MESES[mesFech]+' / '+anoFech;
@@ -3830,10 +4015,15 @@ function getVendasCaixa(caixa){
   if(!caixa) return [];
   const ini = new Date(caixa.abertura);
   const fim = caixa.fechamento ? new Date(caixa.fechamento) : new Date();
-  return Object.values(vendas).filter(v=>{
+  let vs = Object.values(vendas).filter(v=>{
     const d = new Date(v.data);
     return d >= ini && d <= fim;
   });
+  // Operador comum só vê suas próprias vendas
+  if(opAtual && opAtual.perfil!=='admin'){
+    vs = vs.filter(v=>v.operadorKey===opAtual._key||v.operadorNome===opAtual.nome);
+  }
+  return vs;
 }
 
 function renderCaixa(){
@@ -3844,8 +4034,13 @@ function renderCaixa(){
 }
 
 function renderCaixaFechado(el){
-  // histórico últimos caixas
-  const hist=Object.entries(caixas).map(([k,c])=>({...c,_key:k})).sort((a,b)=>new Date(b.abertura)-new Date(a.abertura)).slice(0,10);
+  // Admin vê todos os caixas, operador só vê os seus
+  let hist=Object.entries(caixas).map(([k,c])=>({...c,_key:k}))
+    .sort((a,b)=>new Date(b.abertura)-new Date(a.abertura));
+  if(opAtual && opAtual.perfil!=='admin'){
+    hist=hist.filter(c=>c.operadorKey===opAtual._key||c.operadorNome===opAtual.nome);
+  }
+  hist=hist.slice(0,10);
   el.innerHTML=`
     <div style="text-align:center;padding:30px 20px;">
       <div style="font-size:3rem;margin-bottom:12px;">🏦</div>
@@ -4212,6 +4407,12 @@ window.abrirCaixa=async function(){
   const val=parseFloat(document.getElementById('valorAbertura').value)||0;
   const obs=document.getElementById('obsAbertura').value.trim();
   if(val<0){ toast('Valor inválido','vermelho'); return; }
+  // Verificar se já há caixa aberto por OUTRO operador
+  const cxExistente=getCaixaAberto();
+  if(cxExistente && cxExistente.operadorKey && cxExistente.operadorKey!==opAtual?._key && opAtual?.perfil!=='admin'){
+    toast(`⚠️ Caixa já aberto por ${cxExistente.operadorNome||'outro operador'}. Aguarde o fechamento.`,'vermelho');
+    return;
+  }
   setSyncDot('sync');
   await push(ref(db,'caixas'),{
     status:'aberto',
