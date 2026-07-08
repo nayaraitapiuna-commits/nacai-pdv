@@ -1522,13 +1522,19 @@ function dataLocalStr(d){
 function atualizarSaldoHeader(){
   const agora = new Date();
   const hojeStr = `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}-${String(agora.getDate()).padStart(2,'0')}`;
-  const vs = Object.values(vendas).filter(v=>{
-    // Converter para data local antes de comparar
+  const todasVendas = Object.values(vendas);
+  const vs = todasVendas.filter(v=>{
     const d = new Date(v.data);
     const dStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     return dStr === hojeStr;
   });
   const total = vs.reduce((a,v)=>a+v.total, 0);
+  // Debug: mostrar quais vendas estão sendo somadas
+  console.log('=== HOJE ===', hojeStr);
+  console.log('Total vendas no banco:', todasVendas.length);
+  console.log('Vendas filtradas para hoje:', vs.length);
+  vs.forEach(v=>console.log(' -', v.data, '| local:', new Date(v.data).toLocaleString('pt-BR'), '| R$', v.total));
+  console.log('TOTAL:', total);
   document.getElementById('saldo-header').textContent='💰 Hoje: R$ '+fmt(total);
 }
 
