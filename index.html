@@ -1298,8 +1298,9 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
 
   <div class="cfg-section" style="border:1.5px solid #FFD5D5;">
     <h3 style="color:var(--vermelho);">🗑️ Zerar dados</h3>
-    <button onclick="zerarVendas()" style="background:var(--vermelho);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.82rem;margin-bottom:8px;">Apagar histórico de vendas</button><br>
-    <button onclick="zerarLancamentos()" style="background:var(--vermelho);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.82rem;margin-top:8px;">Apagar lançamentos financeiros</button><br>
+    <button onclick="zerarVendas()" style="background:var(--vermelho);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.82rem;margin-bottom:8px;">🗑 Apagar TODO histórico de vendas</button><br>
+    <button onclick="zerarLancamentos()" style="background:var(--vermelho);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.82rem;margin-top:8px;">🗑 Apagar lançamentos financeiros</button><br>
+    <button onclick="limparVendasSemOperador()" style="background:var(--amarelo);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.82rem;margin-top:8px;">👤 Deletar vendas sem operador</button><br>
     <button onclick="zerarMesas()" style="background:var(--amarelo);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.82rem;margin-top:8px;">🪑 Limpar mesas abertas (emergência)</button>
   </div>
 </div>
@@ -1874,12 +1875,31 @@ function atualizarPagResumo(){
 // ── FINALIZAR VENDA ──────────────────────────────────────────
 window.finalizarVenda=async function(){
   if(!st.itens.length){ toast('Adicione itens','vermelho'); return; }
-  // ── VERIFICAR CAIXA ABERTO ──
-  if(!getCaixaAberto()){ 
-    toast('⚠️ Abra o caixa antes de realizar vendas!','vermelho'); 
-    irTab('caixa', document.querySelectorAll('.tab')[1]);
-    return; 
+
+  // ── VERIFICAR OPERADOR LOGADO ──
+  if(!opAtual){
+    toast('⚠️ Nenhum operador logado! Faça login primeiro.','vermelho');
+    document.getElementById('loginScreen').style.display='flex';
+    return;
   }
+
+  // ── VERIFICAR CAIXA ABERTO (local + Firebase em tempo real) ──
+  const cxLocal = getCaixaAberto();
+  if(!cxLocal){
+    toast('⚠️ Caixa fechado! Abra o caixa antes de vender.','vermelho');
+    irTab('caixa', document.querySelectorAll('.tab')[1]);
+    return;
+  }
+  // Verificar também no Firebase para evitar race condition
+  try{
+    const snap = await get(ref(db,'caixas/'+cxLocal._key));
+    if(!snap.exists() || snap.val().status !== 'aberto'){
+      toast('⚠️ Caixa foi fechado! Não é possível vender.','vermelho');
+      irTab('caixa', document.querySelectorAll('.tab')[1]);
+      return;
+    }
+  }catch(e){ /* sem internet — continuar com estado local */ }
+
   const nome=document.getElementById('fNome').value.trim();
   if((st.tipo==='delivery'||st.tipo==='retirada')&&!nome){ toast('Informe o nome do cliente','vermelho'); return; }
   const formasPag=Object.keys(st.pagamentos);
@@ -2704,6 +2724,7 @@ window.zerarVendas=async function(){
   if(!confirm('Apagar TODO o histórico de vendas? Isso não pode ser desfeito.'))return;
   setSyncDot('sync');
   await set(ref(db,'vendas'),null);
+  await set(ref(db,'lancamentos'),null);
   setSyncDot('ok');
   toast('Histórico apagado','vermelho');
 };
@@ -2713,6 +2734,26 @@ window.zerarLancamentos=async function(){
   await set(ref(db,'lancamentos'),null);
   setSyncDot('ok');
   toast('Lançamentos apagados','vermelho');
+};
+
+window.limparVendasSemOperador=async function(){
+  const semOp=Object.entries(vendas).filter(([,v])=>!v.operadorKey&&!v.operadorNome);
+  if(!semOp.length){ toast('Nenhuma venda sem operador encontrada ✓','verde'); return; }
+  if(!confirm(`Deletar ${semOp.length} venda(s) sem operador?\n\nEssa ação não pode ser desfeita.`)) return;
+  setSyncDot('sync');
+  for(const [k] of semOp){
+    await remove(ref(db,'vendas/'+k));
+  }
+  // Remover lançamentos automáticos dessas vendas também
+  const numeros=semOp.map(([,v])=>v.numero);
+  const lancSemOp=Object.entries(lancamentos).filter(([,l])=>
+    l.auto && numeros.some(n=>l.desc&&l.desc.includes('#'+String(n).padStart(3,'0')))
+  );
+  for(const [k] of lancSemOp){
+    await remove(ref(db,'lancamentos/'+k));
+  }
+  setSyncDot('ok');
+  toast(`${semOp.length} venda(s) sem operador removidas ✓`,'verde');
 };
 
 // ── DESCONTO ──────────────────────────────────────────────────
@@ -2956,12 +2997,13 @@ function aplicarPermissoesTabs(){
 window.trocarOperador=function(){
   if(!confirm(`Sair como ${opAtual?.nome}?`))return;
   opAtual=null;
+  // Ocultar app completamente até novo login
+  document.querySelectorAll('header,nav,.page').forEach(el=>el.style.visibility='hidden');
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('opBadge').style.display='none';
   document.getElementById('loginOps').style.display='grid';
   document.getElementById('loginSenhaBox').style.display='none';
   pinBuffer=''; opSelecionado=null;
-  // restaurar todas as tabs
   document.querySelectorAll('.tab').forEach(t=>t.style.display='');
   renderLoginOps();
 };
@@ -3961,6 +4003,15 @@ window.fecharMesa=async function(){
   const totalPago=getMesaTotalPago();
   if(totalPago<total-0.005){toast('Falta R$ '+fmt(total-totalPago)+' para cobrir o total','vermelho');return;}
   if(!opAtual){ toast('⚠️ Nenhum operador logado!','vermelho'); return; }
+  // Verificar caixa em tempo real no Firebase
+  const cxMesa = getCaixaAberto();
+  if(!cxMesa){ toast('⚠️ Caixa fechado! Abra o caixa antes de fechar a mesa.','vermelho'); return; }
+  try{
+    const snapCx = await get(ref(db,'caixas/'+cxMesa._key));
+    if(!snapCx.exists() || snapCx.val().status !== 'aberto'){
+      toast('⚠️ Caixa foi fechado! Não é possível fechar a mesa.','vermelho'); return;
+    }
+  }catch(e){}
   if(!getCaixaAberto()){toast('⚠️ Caixa fechado!','vermelho');return;}
 
   const snap=await get(ref(db,'mesas/'+mesaAtual));
