@@ -1149,6 +1149,7 @@ header{background:linear-gradient(135deg,var(--roxo-e),var(--roxo));color:#fff;p
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
       <div style="font-size:.85rem;font-weight:800;color:var(--acai);">🏦 Histórico de Caixas</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button onclick="abrirVincularOperador()" style="background:var(--lilas);color:var(--roxo-e);border:none;padding:7px 14px;border-radius:8px;font-size:.75rem;font-weight:700;cursor:pointer;">👤 Vincular vendas sem operador</button>
         <input type="date" id="auditDataInicio" class="fi" style="width:auto;padding:6px 10px;" onchange="renderAuditoria()">
         <span style="font-size:.78rem;color:var(--cinza);">até</span>
         <input type="date" id="auditDataFim" class="fi" style="width:auto;padding:6px 10px;" onchange="renderAuditoria()">
@@ -1388,9 +1389,16 @@ function setSyncDot(state){
 }
 
 // ── FIREBASE LISTENERS (tempo real) ──────────────────────────
+// Guardar referências dos listeners para cancelar se necessário
+let _unsubListeners = [];
+
 function iniciarListeners(){
+  // Cancelar listeners anteriores
+  _unsubListeners.forEach(u=>{ try{u();}catch(e){} });
+  _unsubListeners = [];
+
   // CONFIG
-  onValue(ref(db,'config'), snap=>{
+  const u1 = onValue(ref(db,'config'), snap=>{
     if(snap.exists()){
       const remote=snap.val();
       cfg={...cfg,...remote};
@@ -1428,9 +1436,10 @@ function iniciarListeners(){
     document.getElementById('statusFb').textContent='● Online';
     document.getElementById('statusFb').className='ok';
   },{onlyOnce:false});
+  _unsubListeners.push(u1);
 
   // VENDAS
-  onValue(ref(db,'vendas'), snap=>{
+  const u2=onValue(ref(db,'vendas'), snap=>{
     vendas={};
     if(snap.exists()) vendas=snap.val();
     const tabAtiva=document.querySelector('.tab.active');
@@ -1438,27 +1447,29 @@ function iniciarListeners(){
     atualizarSaldoHeader();
     setSyncDot('ok');
   });
+  _unsubListeners.push(u2);
 
   // LANÇAMENTOS
-  onValue(ref(db,'lancamentos'), snap=>{
+  const u3=onValue(ref(db,'lancamentos'), snap=>{
     lancamentos={};
     if(snap.exists()) lancamentos=snap.val();
     const tabAtiva=document.querySelector('.tab.active');
     if(tabAtiva && tabAtiva.textContent.includes('Financeiro')){ renderLancamentos(filtFinAtivo); renderFinResumo(); }
-    atualizarSaldoHeader();
     setSyncDot('ok');
   });
+  _unsubListeners.push(u3);
 
   // MESAS
-  onValue(ref(db,'mesas'), snap=>{
+  const u4=onValue(ref(db,'mesas'), snap=>{
     mesas={};
     if(snap.exists()) mesas=snap.val();
     const tabAtiva=document.querySelector('.tab.active');
     if(tabAtiva && tabAtiva.textContent.includes('Mesas')) renderMesas();
   });
+  _unsubListeners.push(u4);
 
   // CAIXAS
-  onValue(ref(db,'caixas'), snap=>{
+  const u5=onValue(ref(db,'caixas'), snap=>{
     caixas={};
     if(snap.exists()) caixas=snap.val();
     const tabAtiva=document.querySelector('.tab.active');
@@ -1467,14 +1478,16 @@ function iniciarListeners(){
     const aviso=document.getElementById('avisoCaixaFechado');
     if(aviso) aviso.style.display=getCaixaAberto()?'none':'flex';
   });
+  _unsubListeners.push(u5);
 
   // CLIENTES
-  onValue(ref(db,'clientes'), snap=>{
+  const u6=onValue(ref(db,'clientes'), snap=>{
     clientes={};
     if(snap.exists()) clientes=snap.val();
     const tabAtiva=document.querySelector('.tab.active');
     if(tabAtiva && tabAtiva.textContent.includes('Clientes')) renderClientes();
   });
+  _unsubListeners.push(u6);
 }
 
 // ── SALVAR CONFIG ─────────────────────────────────────────────
@@ -1494,10 +1507,28 @@ async function salvarCfgFb(){
 function tick(){ document.getElementById('relogio').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
 setInterval(tick,1000); tick();
 
+
+// Helper: comparar data local ignorando fuso UTC
+function mesmaDataLocal(iso, ref){
+  const d=new Date(iso);
+  const r=ref||new Date();
+  return d.getFullYear()===r.getFullYear() && d.getMonth()===r.getMonth() && d.getDate()===r.getDate();
+}
+function dataLocalStr(d){ 
+  const dt=d||new Date();
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
+
 function atualizarSaldoHeader(){
-  const hoje=new Date().toDateString();
-  const vs=Object.values(vendas).filter(v=>new Date(v.data).toDateString()===hoje);
-  const total=vs.reduce((a,v)=>a+v.total,0);
+  const agora = new Date();
+  const hojeStr = `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}-${String(agora.getDate()).padStart(2,'0')}`;
+  const vs = Object.values(vendas).filter(v=>{
+    // Converter para data local antes de comparar
+    const d = new Date(v.data);
+    const dStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return dStr === hojeStr;
+  });
+  const total = vs.reduce((a,v)=>a+v.total, 0);
   document.getElementById('saldo-header').textContent='💰 Hoje: R$ '+fmt(total);
 }
 
@@ -1942,8 +1973,8 @@ function renderHist(f){
   if(opAtual && opAtual.perfil!=='admin'){
     vs=vs.filter(v=>v.operadorKey===opAtual._key||v.operadorNome===opAtual.nome);
   }
-  const hoje=new Date().toDateString();
-  if(f==='hoje') vs=vs.filter(v=>new Date(v.data).toDateString()===hoje);
+  const hoje=new Date();
+  if(f==='hoje') vs=vs.filter(v=>mesmaDataLocal(v.data,hoje));
   else if(f==='semana'){ const d7=new Date(); d7.setDate(d7.getDate()-7); vs=vs.filter(v=>new Date(v.data)>=d7); }
   else if(f!=='todos') vs=vs.filter(v=>v.tipo===f);
   const el=document.getElementById('histLista');
@@ -2038,12 +2069,12 @@ const statusLan=l=>{
 };
 function renderLancamentos(f){
   let ls=Object.entries(lancamentos).map(([k,l])=>({...l,_key:k})).sort((a,b)=>new Date(b.data)-new Date(a.data));
-  const hoje=new Date().toDateString();
+  const hoje=new Date();
   if(f==='receber') ls=ls.filter(l=>l.tipo==='receber');
   else if(f==='pagar') ls=ls.filter(l=>l.tipo==='pagar');
   else if(f==='pendente') ls=ls.filter(l=>!l.pago);
   else if(f==='vencido') ls=ls.filter(l=>{ if(l.pago)return false; const v=new Date(l.venc+'T23:59:59'); return v<new Date(); });
-  else if(f==='hoje') ls=ls.filter(l=>new Date(l.data).toDateString()===hoje);
+  else if(f==='hoje') ls=ls.filter(l=>mesmaDataLocal(l.data,hoje));
   const el=document.getElementById('lanLista');
   if(!ls.length){ el.innerHTML='<div style="text-align:center;color:var(--cinza);padding:40px;">Nenhum lançamento aqui.</div>'; return; }
   el.innerHTML=ls.map(l=>{
@@ -2232,6 +2263,79 @@ function renderAuditoria(){
 window.reabrirRelatorio=function(key){
   const c=caixas[key]; if(!c||!c.resumo)return;
   mostrarModalFechamentoCaixa(key,c,c.resumo,c.obsFechamento||'');
+};
+
+// ── VINCULAR VENDAS SEM OPERADOR ─────────────────────────────
+window.abrirVincularOperador=function(){
+  const semOp=Object.entries(vendas)
+    .filter(([,v])=>!v.operadorKey&&!v.operadorNome)
+    .map(([k,v])=>({...v,_key:k}))
+    .sort((a,b)=>new Date(b.data)-new Date(a.data));
+
+  if(!semOp.length){ toast('Nenhuma venda sem operador ✓','verde'); return; }
+
+  const ops=Object.entries(operadores).map(([k,o])=>({...o,_key:k}));
+
+  const div=document.createElement('div');
+  div.id='modalVincular';
+  div.className='modal-ov show';
+  div.innerHTML=`
+  <div class="modal" style="max-width:520px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-size:.95rem;font-weight:800;">👤 Vincular vendas sem operador</div>
+      <button onclick="document.getElementById('modalVincular').remove()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--cinza);">✕</button>
+    </div>
+    <div style="background:var(--creme);border-radius:9px;padding:10px 14px;margin-bottom:14px;font-size:.8rem;color:var(--cinza);">
+      Encontradas <strong>${semOp.length} venda(s)</strong> sem operador. Selecione o operador e clique em Vincular.
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:.72rem;font-weight:700;color:var(--cinza);display:block;margin-bottom:6px;">Vincular todas a:</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <select id="opVincular" class="fi" style="flex:1;">
+          <option value="">Selecione o operador</option>
+          ${ops.map(o=>`<option value="${o._key}" data-nome="${o.nome}">${o.nome} (${o.perfil})</option>`).join('')}
+        </select>
+        <button onclick="confirmarVinculo()" style="background:var(--roxo);color:#fff;border:none;padding:9px 18px;border-radius:9px;font-weight:700;font-size:.82rem;cursor:pointer;">✅ Vincular todas</button>
+      </div>
+    </div>
+    <div style="max-height:300px;overflow-y:auto;">
+      ${semOp.map(v=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--cinza-c);font-size:.78rem;">
+          <div>
+            <span style="font-weight:700;">#${String(v.numero).padStart(3,'0')}</span>
+            <span style="color:var(--cinza);margin-left:6px;">${new Date(v.data).toLocaleDateString('pt-BR')} ${new Date(v.data).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>
+            <span style="margin-left:6px;">${v.cliente||'—'}</span>
+          </div>
+          <span style="font-weight:700;color:var(--verde-e);">R$ ${fmt(v.total)}</span>
+        </div>`).join('')}
+    </div>
+  </div>`;
+  document.body.appendChild(div);
+};
+
+window.confirmarVinculo=async function(){
+  const sel=document.getElementById('opVincular');
+  const opKey=sel?.value;
+  const opNome=sel?.options[sel.selectedIndex]?.dataset?.nome;
+  if(!opKey){ toast('Selecione um operador','vermelho'); return; }
+
+  const semOp=Object.entries(vendas)
+    .filter(([,v])=>!v.operadorKey&&!v.operadorNome)
+    .map(([k,v])=>({...v,_key:k}));
+
+  if(!confirm(`Vincular ${semOp.length} venda(s) ao operador "${opNome}"?`)) return;
+
+  const btn=document.querySelector('#modalVincular button[onclick="confirmarVinculo()"]');
+  if(btn){ btn.textContent='⏳ Vinculando...'; btn.disabled=true; }
+
+  setSyncDot('sync');
+  for(const v of semOp){
+    await update(ref(db,'vendas/'+v._key),{operadorKey:opKey,operadorNome:opNome});
+  }
+  setSyncDot('ok');
+  document.getElementById('modalVincular')?.remove();
+  toast(`${semOp.length} venda(s) vinculadas a ${opNome} ✓`,'verde');
+  renderAuditoria();
 };
 window.navMes=function(d){ mesFech+=d; if(mesFech>11){mesFech=0;anoFech++;}if(mesFech<0){mesFech=11;anoFech--;} renderFechamento(); };
 function renderFechamento(){
@@ -3818,6 +3922,7 @@ window.fecharMesa=async function(){
   const total=getMesaTotal();
   const totalPago=getMesaTotalPago();
   if(totalPago<total-0.005){toast('Falta R$ '+fmt(total-totalPago)+' para cobrir o total','vermelho');return;}
+  if(!opAtual){ toast('⚠️ Nenhum operador logado!','vermelho'); return; }
   if(!getCaixaAberto()){toast('⚠️ Caixa fechado!','vermelho');return;}
 
   const snap=await get(ref(db,'mesas/'+mesaAtual));
@@ -3842,7 +3947,9 @@ window.fecharMesa=async function(){
     ajusteTipo:_mesaAjuste.tipo,
     ajusteValorTipo:_mesaAjuste.valorTipo,
     ajusteValor:_mesaAjuste.valor,
-    taxa:0, total
+    taxa:0, total,
+    operadorKey:opAtual._key,
+    operadorNome:opAtual.nome
   };
   await push(ref(db,'vendas'),v);
   await push(ref(db,'lancamentos'),{
@@ -4013,17 +4120,30 @@ function getCaixaAberto(){
 
 function getVendasCaixa(caixa){
   if(!caixa) return [];
-  const ini = new Date(caixa.abertura);
-  const fim = caixa.fechamento ? new Date(caixa.fechamento) : new Date();
+  // Margem de 30 segundos para cobrir diferenças de timestamp
+  const ini = new Date(new Date(caixa.abertura).getTime() - 30000);
+  const fim = caixa.fechamento ? new Date(new Date(caixa.fechamento).getTime() + 30000) : new Date();
   let vs = Object.values(vendas).filter(v=>{
     const d = new Date(v.data);
     return d >= ini && d <= fim;
   });
-  // Operador comum só vê suas próprias vendas
+  // Operador comum só vê suas próprias vendas no HISTÓRICO
+  // mas no CAIXA vê todas (o dinheiro é do caixa, não do operador)
   if(opAtual && opAtual.perfil!=='admin'){
     vs = vs.filter(v=>v.operadorKey===opAtual._key||v.operadorNome===opAtual.nome);
   }
   return vs;
+}
+
+// Versão sem filtro de operador — para fechamento e auditoria admin
+function getVendasCaixaTodas(caixa){
+  if(!caixa) return [];
+  const ini = new Date(new Date(caixa.abertura).getTime() - 30000);
+  const fim = caixa.fechamento ? new Date(new Date(caixa.fechamento).getTime() + 30000) : new Date();
+  return Object.values(vendas).filter(v=>{
+    const d = new Date(v.data);
+    return d >= ini && d <= fim;
+  });
 }
 
 function renderCaixa(){
@@ -4081,7 +4201,8 @@ function renderCaixaFechado(el){
 }
 
 function renderCaixaAberto(el,cx){
-  const vs=getVendasCaixa(cx);
+  // TODAS as vendas do período para cálculo do caixa
+  const vs=getVendasCaixaTodas(cx);
   const totalVendas = vs.reduce((a,v) => a + v.total, 0);
   // Calcular por forma de pagamento usando SEMPRE o objeto pagamentos
   const totalDinheiro = vs.reduce((a,v) => {
@@ -4295,10 +4416,10 @@ window.fecharCaixaClick=async function(){
   const totalContado = contadoDin+contadoPix+contadoCred+contadoDeb;
   const obs = (document.getElementById('obsFechamento')||{}).value||'';
 
-  // Calcular totais das vendas
+  // Calcular totais das vendas — TODAS do período (não filtra por operador)
   const cx = getCaixaAberto();
   if(!cx){ alert('Nenhum caixa aberto!'); return; }
-  const vs = getVendasCaixa(cx);
+  const vs = getVendasCaixaTodas(cx);
   const totalVendas  = vs.reduce((a,v)=>a+v.total,0);
   const totalDin     = vs.reduce((a,v)=>a+(v.pagamentos?.dinheiro||(!v.pagamentos&&v.pag==='Dinheiro'?v.total:0)),0);
   const totalPix2    = vs.reduce((a,v)=>a+(v.pagamentos?.pix||0),0);
