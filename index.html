@@ -1533,7 +1533,6 @@ function atualizarSaldoHeader(){
   el.textContent='💰 Hoje: R$ '+fmt(total);
   el.style.cursor='pointer';
   el.onclick=function(){
-    // Remover modal anterior
     document.getElementById('modalDebugHoje')?.remove();
     const div=document.createElement('div');
     div.id='modalDebugHoje';
@@ -1559,6 +1558,16 @@ function atualizarSaldoHeader(){
     </div>`;
     document.body.appendChild(div);
   };
+
+  // Bloquear botão finalizar venda se caixa fechado
+  const btnFin = document.querySelector('.btn-ok[onclick="finalizarVenda()"]');
+  const cxAberto = getCaixaAberto();
+  if(btnFin){
+    btnFin.disabled = !cxAberto;
+    btnFin.style.opacity = cxAberto ? '1' : '0.4';
+    btnFin.style.cursor = cxAberto ? 'pointer' : 'not-allowed';
+    btnFin.title = cxAberto ? '' : 'Abra o caixa antes de vender';
+  }
 }
 
 // ── TABS ─────────────────────────────────────────────────────
