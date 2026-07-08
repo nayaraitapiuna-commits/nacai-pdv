@@ -1529,13 +1529,14 @@ function atualizarSaldoHeader(){
     return dStr === hojeStr;
   });
   const total = vs.reduce((a,v)=>a+v.total, 0);
-  // Debug: mostrar quais vendas estão sendo somadas
-  console.log('=== HOJE ===', hojeStr);
-  console.log('Total vendas no banco:', todasVendas.length);
-  console.log('Vendas filtradas para hoje:', vs.length);
-  vs.forEach(v=>console.log(' -', v.data, '| local:', new Date(v.data).toLocaleString('pt-BR'), '| R$', v.total));
-  console.log('TOTAL:', total);
-  document.getElementById('saldo-header').textContent='💰 Hoje: R$ '+fmt(total);
+  const el = document.getElementById('saldo-header');
+  el.textContent='💰 Hoje: R$ '+fmt(total);
+  el.title = `${vs.length} vendas · clique para detalhes`;
+  el.style.cursor='pointer';
+  el.onclick=function(){
+    const linhas = vs.map(v=>`#${String(v.numero).padStart(3,'0')} · ${new Date(v.data).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${v.cliente||'—'} · R$ ${fmt(v.total)}`).join('\n');
+    alert(`Vendas de hoje (${hojeStr}):\nTotal: ${todasVendas.length} no banco | ${vs.length} de hoje\n\n${linhas||'Nenhuma'}`);
+  };
 }
 
 // ── TABS ─────────────────────────────────────────────────────
